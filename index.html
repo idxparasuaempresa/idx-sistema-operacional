@@ -1628,29 +1628,69 @@ const SUB_TABS = [
 ];
 
 // ============================================================
-// ROTINA POR CLIENTE — Tarefas baseadas na metodologia Subido
-// Objetivo: rastrear execução diária/semanal/mensal por cliente
+// ROTINA POR CLIENTE — Metodologia completa Gestão de Tráfego
+// Baseado em: 19 métricas, funil de otimização, gestão de
+// lances/criativos e documentação como diferencial competitivo
 // ============================================================
+
 const RC_DIARIO = [
-  { key: 'rd1', label: '💰 Verificar gasto vs. orçamento diário (pacing acelerado ou lento?)' },
-  { key: 'rd2', label: '🎯 CPA real vs. meta do cliente — dentro ou fora?' },
-  { key: 'rd3', label: '📊 CTR e CPM das campanhas ativas (queda = saturação ou segmentação errada)' },
-  { key: 'rd4', label: '📲 Leads/contatos gerados no dia (qualidade + volume)' },
-  { key: 'rd5', label: '📝 Observação registrada no diário do cliente' },
+  // ANÁLISE DE MÉTRICAS
+  { key: 'rd1',  sec: 'analise',    label: '💰 Pacing: gasto do dia vs. orçamento diário (acelerado → reduzir; lento → aumentar)' },
+  { key: 'rd2',  sec: 'analise',    label: '🎯 CPA real vs. meta do cliente em todas as campanhas ativas' },
+  { key: 'rd3',  sec: 'analise',    label: '📉 CPM e CTR: identificar queda repentina (saturação ou criativo fraco)' },
+  { key: 'rd4',  sec: 'analise',    label: '🔁 Frequência: anúncio com >2,5 → saturação confirmada → subir novo criativo' },
+  { key: 'rd5',  sec: 'analise',    label: '🔗 Connect Rate: cliques que viraram contatos/mensagens (baixo = problema no destino)' },
+  // VERIFICAÇÕES OPERACIONAIS
+  { key: 'rd6',  sec: 'operacional', label: '🔍 Destino dos anúncios: link funcionando? WhatsApp abre? LP carrega em menos de 3s?' },
+  { key: 'rd7',  sec: 'operacional', label: '📲 Volume e qualidade dos leads/contatos gerados no dia' },
+  { key: 'rd8',  sec: 'operacional', label: '🔔 Notificações e alertas críticos no BM (Meta) e Google Ads' },
+  // OTIMIZAÇÕES DO DIA
+  { key: 'rd9',  sec: 'otimizacao', label: '❌ Pausar anúncios com CTR <0,5% + CPM alto + sem conversão há 3+ dias' },
+  { key: 'rd10', sec: 'otimizacao', label: '📈 Aumentar orçamento nos conjuntos com CPA dentro da meta e resultados consistentes' },
+  { key: 'rd11', sec: 'otimizacao', label: '🗺️ Clientes com CPA acima da meta: mapear funil (CPM→CTR→Connect→Conversão) e agir no gargalo' },
+  // DOCUMENTAÇÃO
+  { key: 'rd12', sec: 'doc',        label: '📝 Registrar TODAS as ações realizadas no diário (o que foi feito + por quê)' },
 ];
+
 const RC_SEMANAL = [
-  { key: 'rs1', label: '📋 Performance semanal analisada: CPM, CPC, CTR, CPA vs. meta' },
-  { key: 'rs2', label: '📨 Relatório semanal enviado para o cliente (WhatsApp ou e-mail)' },
-  { key: 'rs3', label: '🎨 Ao menos 1 novo criativo ou variação lançada' },
-  { key: 'rs4', label: '👥 Segmentação e públicos revisados (temperatura, tamanho, exclusões)' },
-  { key: 'rs5', label: '✅ Pixel e rastreamento de conversões verificados' },
+  // ANÁLISE DE PERFORMANCE
+  { key: 'rs1',  sec: 'analise',    label: '📊 Consolidar métricas semanais: CPM, CPC, CTR, CPA, conversões totais vs. meta' },
+  { key: 'rs2',  sec: 'analise',    label: '🎥 Hook Rate dos criativos em vídeo: primeiros 3s retêm o público? (baixo = reescrever gancho)' },
+  { key: 'rs3',  sec: 'analise',    label: '🔗 Connect Rate: % de cliques → contatos (baixo = destino fraco ou promessa ≠ entrega)' },
+  { key: 'rs4',  sec: 'analise',    label: '🗺️ Mapear funil completo e identificar o principal gargalo da semana' },
+  { key: 'rs5',  sec: 'analise',    label: '📈 Comparar performance vs. semana anterior (tendência de melhora ou piora?)' },
+  { key: 'rs6',  sec: 'analise',    label: '👥 Qualidade dos leads: perfil correto? Segmentação precisa de ajuste?' },
+  // OTIMIZAÇÕES ESTRATÉGICAS
+  { key: 'rs7',  sec: 'otimizacao', label: '🎨 Lançar ao menos 1 novo criativo ou variação do anúncio vencedor' },
+  { key: 'rs8',  sec: 'otimizacao', label: '❌ Pausar anúncios abaixo do threshold de performance (CTR baixo + CPM alto + sem conv.)' },
+  { key: 'rs9',  sec: 'otimizacao', label: '👥 Revisar segmentação: temperatura [F/M/Q], tamanho de público, exclusões, raio geográfico' },
+  { key: 'rs10', sec: 'otimizacao', label: '♻️ Ativar/atualizar públicos de remarketing (30-90 dias de envolvimento com perfil/site)' },
+  { key: 'rs11', sec: 'otimizacao', label: '✅ Verificar pixel, eventos de conversão e rastreamento de todos os objetivos' },
+  // COMUNICAÇÃO
+  { key: 'rs12', sec: 'comunicacao', label: '📄 Preparar e enviar relatório semanal: métricas + ações realizadas + próximos passos' },
+  { key: 'rs13', sec: 'comunicacao', label: '🤝 Alinhar expectativas, testes planejados e próximas ações com o cliente' },
 ];
+
 const RC_MENSAL = [
-  { key: 'rm1', label: '📊 Métricas finais do mês consolidadas (investimento, CPA real, conversões)' },
-  { key: 'rm2', label: '📄 Relatório mensal completo enviado com leitura estratégica' },
-  { key: 'rm3', label: '🤝 Reunião de alinhamento realizada com apresentação de resultados' },
-  { key: 'rm4', label: '🎯 Estratégia, orçamento e metas do próximo mês revisados' },
-  { key: 'rm5', label: '💰 Cobrança emitida e contrato/renovação verificados' },
+  // FECHAMENTO TÉCNICO
+  { key: 'rm1',  sec: 'fechamento', label: '📊 Consolidar métricas finais: investimento total, CPA real, CPM médio, CTR médio, conversões' },
+  { key: 'rm2',  sec: 'fechamento', label: '⚖️ Comparar resultado vs. meta definida e vs. mês anterior (cresceu ou regrediu?)' },
+  { key: 'rm3',  sec: 'fechamento', label: '🏆 Identificar anúncio vencedor do mês (melhor CPA + maior volume de conversões)' },
+  { key: 'rm4',  sec: 'fechamento', label: '🔎 Analisar padrão: o que funcionou? O que falhou? Qual o gargalo dominante do mês?' },
+  { key: 'rm5',  sec: 'fechamento', label: '🗃️ Registrar métricas no histórico do sistema (aba Histórico do cliente)' },
+  // RELATÓRIO E COMUNICAÇÃO
+  { key: 'rm6',  sec: 'relatorio',  label: '📄 Montar relatório mensal completo: resumo executivo + métricas + ações + diagnóstico + próximos passos' },
+  { key: 'rm7',  sec: 'relatorio',  label: '📤 Enviar relatório mensal com leitura estratégica dos dados (não só números)' },
+  { key: 'rm8',  sec: 'relatorio',  label: '🤝 Realizar reunião de alinhamento e apresentação de resultados' },
+  { key: 'rm9',  sec: 'relatorio',  label: '⭐ Solicitar depoimento/case se resultados foram acima da meta' },
+  // ESTRATÉGIA DO PRÓXIMO MÊS
+  { key: 'rm10', sec: 'estrategia', label: '🎯 Definir orçamento diário, meta de CPA e estrutura de campanhas do próximo mês' },
+  { key: 'rm11', sec: 'estrategia', label: '🎨 Planejar novos criativos, testes de segmentação e variações do anúncio vencedor' },
+  { key: 'rm12', sec: 'estrategia', label: '🔗 Revisar oferta, LP e destino dos anúncios (está convertendo bem? Precisa de ajuste?)' },
+  { key: 'rm13', sec: 'estrategia', label: '📋 Atualizar estratégia do cliente no sistema com plano do próximo mês' },
+  // FINANCEIRO / COMERCIAL
+  { key: 'rm14', sec: 'financeiro', label: '💰 Emitir cobrança do mês e verificar contrato/renovação' },
+  { key: 'rm15', sec: 'financeiro', label: '⚠️ Analisar risco de churn: resultado fraco + comunicação baixa = cliente em risco' },
 ];
 
 const ROTINA_MANHA = [
@@ -3460,6 +3500,13 @@ async function renderClientRotina(content) {
   }).catch(() => { if (syncEl()) syncEl().textContent = '📴 offline (local)'; });
 }
 
+// Seção labels por tipo
+const RC_SEC_LABELS = {
+  diario:   { analise:'📊 Análise de Métricas', operacional:'⚙️ Verificações Operacionais', otimizacao:'🔧 Otimizações do Dia', doc:'📝 Documentação' },
+  semanal:  { analise:'📊 Análise de Performance', otimizacao:'🔧 Otimizações Estratégicas', comunicacao:'🤝 Comunicação com Cliente' },
+  mensal:   { fechamento:'📈 Fechamento Técnico', relatorio:'📄 Relatório e Comunicação', estrategia:'🎯 Estratégia do Próximo Mês', financeiro:'💰 Financeiro / Comercial' }
+};
+
 function rcRenderHTML(content, c) {
   const cid = c.id;
   const cidShort = cid.slice(-8);
@@ -3472,39 +3519,63 @@ function rcRenderHTML(content, c) {
   const stM = rcLoadState(cid, 'mensal');
 
   function buildItems(type, items, state) {
-    return items.map(item => {
-      const checked = !!state[item.key];
-      const time = state[item.key + '_time'] || '';
-      return `<div class="cl-item ${checked?'checked':''}" id="rc-row-${cidShort}-${type}-${item.key}"
-        onclick="rcToggle('${cid}','${type}','${item.key}')">
-        <div class="cl-checkbox"><span class="cl-checkbox-tick">${checked?'✓':''}</span></div>
-        <div class="cl-item-label">${item.label}</div>
-        <div class="cl-item-time">${time}</div>
-      </div>`;
-    }).join('');
+    // Group by sec
+    const secMap = {};
+    items.forEach(item => {
+      const s = item.sec || 'geral';
+      if (!secMap[s]) secMap[s] = [];
+      secMap[s].push(item);
+    });
+    const secLabels = RC_SEC_LABELS[type] || {};
+    let html = '';
+    for (const [sec, secItems] of Object.entries(secMap)) {
+      if (secLabels[sec]) {
+        html += `<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--txt-muted);margin:10px 0 6px;padding-left:2px;border-left:2px solid var(--accent);padding-left:6px;">${secLabels[sec]}</div>`;
+      }
+      html += secItems.map(item => {
+        const checked = !!state[item.key];
+        const time = state[item.key + '_time'] || '';
+        return `<div class="cl-item ${checked?'checked':''}" id="rc-row-${cidShort}-${type}-${item.key}"
+          onclick="rcToggle('${cid}','${type}','${item.key}')">
+          <div class="cl-checkbox"><span class="cl-checkbox-tick">${checked?'✓':''}</span></div>
+          <div class="cl-item-label" style="font-size:11px;">${item.label}</div>
+          <div class="cl-item-time">${time}</div>
+        </div>`;
+      }).join('');
+    }
+    return html;
   }
 
   function buildCard(title, icon, type, items, state, period) {
     const done = items.filter(i => state[i.key]).length;
     const total = items.length;
     const pct = Math.round((done/total)*100);
-    const pctColor = pct===100?'var(--green)':pct>=60?'var(--yellow)':'var(--accent)';
+    const pctColor = pct===100?'var(--green)':pct>=60?'#d4a800':'var(--accent)';
     return `<div class="card" style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div style="font-weight:700;font-size:12px;letter-spacing:.5px;">${icon} ${title}</div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-family:var(--mono);font-size:9px;color:var(--txt-muted);">${period}</span>
-          <span id="rc-pill-${cidShort}-${type}" style="font-size:11px;font-weight:700;color:${pctColor};">${done}/${total}</span>
+          <span id="rc-pill-${cidShort}-${type}" style="font-size:12px;font-weight:800;color:${pctColor};">${done}/${total}</span>
         </div>
       </div>
-      <div class="progress-bar" style="height:4px;border-radius:2px;margin-bottom:12px;">
-        <div id="rc-bar-${cidShort}-${type}" style="width:${pct}%;height:100%;background:${pctColor};border-radius:2px;transition:width .3s;"></div>
+      <div class="progress-bar" style="height:5px;border-radius:3px;margin-bottom:12px;">
+        <div id="rc-bar-${cidShort}-${type}" style="width:${pct}%;height:100%;background:${pctColor};border-radius:3px;transition:width .3s;"></div>
       </div>
       ${buildItems(type, items, state)}
     </div>`;
   }
 
   const dayName = new Date().toLocaleDateString('pt-BR',{weekday:'long'});
+
+  // Score geral do dia
+  const dDone = RC_DIARIO.filter(i => stD[i.key]).length;
+  const sDone = RC_SEMANAL.filter(i => stS[i.key]).length;
+  const mDone = RC_MENSAL.filter(i => stM[i.key]).length;
+  const totalAll = RC_DIARIO.length + RC_SEMANAL.length + RC_MENSAL.length;
+  const doneAll = dDone + sDone + mDone;
+  const pctAll = Math.round((doneAll/totalAll)*100);
+  const pctAllColor = pctAll===100?'var(--green)':pctAll>=60?'#d4a800':'var(--accent)';
 
   content.innerHTML = `
     <div class="detail-header">
@@ -3513,31 +3584,74 @@ function rcRenderHTML(content, c) {
         <div style="font-size:20px;font-weight:800;">${c.nome}</div>
         <div style="color:var(--txt-muted);font-size:12px;margin-top:2px;">${dayName} · ${fmtDate(hoje)}</div>
       </div>
-      <span id="rc-sync-${cidShort}" style="font-size:10px;color:var(--txt-muted);"></span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:22px;font-weight:900;color:${pctAllColor};">${pctAll}%</div>
+          <div style="font-size:9px;color:var(--txt-muted);">completo</div>
+        </div>
+        <span id="rc-sync-${cidShort}" style="font-size:10px;color:var(--txt-muted);"></span>
+      </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <!-- Abas diário / semanal / mensal dentro da rotina do cliente -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+      <button onclick="rcShowTab('${cidShort}','diario')" id="rctab-${cidShort}-diario"
+        class="btn-small" style="background:var(--accent);color:#fff;border-color:var(--accent);">
+        📅 Diário (${dDone}/${RC_DIARIO.length})
+      </button>
+      <button onclick="rcShowTab('${cidShort}','semanal')" id="rctab-${cidShort}-semanal"
+        class="btn-small">
+        📋 Semanal (${sDone}/${RC_SEMANAL.length})
+      </button>
+      <button onclick="rcShowTab('${cidShort}','mensal')" id="rctab-${cidShort}-mensal"
+        class="btn-small">
+        📈 Mensal (${mDone}/${RC_MENSAL.length})
+      </button>
+      <button onclick="rcShowTab('${cidShort}','calendario')" id="rctab-${cidShort}-calendario"
+        class="btn-small">
+        🗓️ Calendário
+      </button>
+    </div>
 
-      <!-- Coluna esquerda: Tarefas Diárias -->
-      <div>
-        ${buildCard('TAREFAS DIÁRIAS', '📅', 'diario', RC_DIARIO, stD, hoje)}
+    <!-- Painel diário (visível por padrão) -->
+    <div id="rcpanel-${cidShort}-diario">
+      ${buildCard('TAREFAS DIÁRIAS — ' + fmtDate(hoje).toUpperCase(), '📅', 'diario', RC_DIARIO, stD, hoje)}
+    </div>
 
-        <!-- Calendário do mês -->
-        <div class="card">
-          <div style="font-weight:700;font-size:12px;letter-spacing:.5px;margin-bottom:14px;">
-            📅 CALENDÁRIO — ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).toUpperCase()}
-          </div>
-          ${rcBuildCalendar(cid)}
+    <!-- Painel semanal (oculto) -->
+    <div id="rcpanel-${cidShort}-semanal" style="display:none;">
+      ${buildCard('TAREFAS SEMANAIS — ' + semana.toUpperCase(), '📋', 'semanal', RC_SEMANAL, stS, semana)}
+    </div>
+
+    <!-- Painel mensal (oculto) -->
+    <div id="rcpanel-${cidShort}-mensal" style="display:none;">
+      ${buildCard('TAREFAS MENSAIS — ' + mes.toUpperCase(), '📈', 'mensal', RC_MENSAL, stM, mes)}
+    </div>
+
+    <!-- Painel calendário (oculto) -->
+    <div id="rcpanel-${cidShort}-calendario" style="display:none;">
+      <div class="card">
+        <div style="font-weight:700;font-size:12px;letter-spacing:.5px;margin-bottom:14px;">
+          🗓️ CALENDÁRIO DE EXECUÇÃO — ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).toUpperCase()}
+          <span style="font-size:10px;font-weight:400;color:var(--txt-muted);margin-left:8px;">dias com 100% das tarefas diárias concluídas</span>
         </div>
-      </div>
-
-      <!-- Coluna direita: Semanal + Mensal -->
-      <div>
-        ${buildCard('TAREFAS SEMANAIS', '📋', 'semanal', RC_SEMANAL, stS, semana)}
-        ${buildCard('TAREFAS MENSAIS', '📈', 'mensal', RC_MENSAL, stM, mes)}
+        ${rcBuildCalendar(cid)}
       </div>
     </div>
   `;
+}
+
+function rcShowTab(cidShort, tab) {
+  ['diario','semanal','mensal','calendario'].forEach(t => {
+    const panel = document.getElementById(`rcpanel-${cidShort}-${t}`);
+    const btn   = document.getElementById(`rctab-${cidShort}-${t}`);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn) {
+      btn.style.background    = t === tab ? 'var(--accent)' : '';
+      btn.style.color         = t === tab ? '#fff' : '';
+      btn.style.borderColor   = t === tab ? 'var(--accent)' : '';
+    }
+  });
 }
 
 async function renderClientEstrategias(content) {
