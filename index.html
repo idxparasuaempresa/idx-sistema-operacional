@@ -4645,17 +4645,19 @@ function addStrategy() {
 }
 
 async function renderClientDiario(content) {
+  const clientSnapshot = CURRENT_CLIENT;
+
   content.innerHTML = `
     <div class="detail-header">
       <div class="detail-title">Diário do Cliente</div>
-      <button class="btn-small" onclick="addDiaryEntry()">+ Novo Registro</button>
+      <button class="btn-small" onclick="addDiaryEntry(event)">+ Novo Registro</button>
     </div>
     <div id="diary-list" style="padding-bottom:40px;">
       <div style="color:var(--txt-muted); font-size:13px; padding:16px 0;">Carregando...</div>
     </div>
   `;
 
-  if (!CURRENT_CLIENT) return;
+  if (!clientSnapshot) return;
 
   let entries = [];
 
@@ -4663,13 +4665,17 @@ async function renderClientDiario(content) {
     const { data, error } = await SB
       .from('diario_cliente')
       .select('*')
-      .eq('client_id', CURRENT_CLIENT.id)
+      .eq('client_id', clientSnapshot.id)
       .order('data_entrada', { ascending: false });
     if (!error && data) entries = data;
   } catch(e) {}
 
+  // Guard: if user navigated away, don't update stale DOM
+  const listEl = document.getElementById('diary-list');
+  if (!listEl) return;
+
   // Merge with localStorage
-  const key = `diario_${CURRENT_CLIENT.id}`;
+  const key = `diario_${clientSnapshot.id}`;
   const local = JSON.parse(localStorage.getItem(key) || '[]');
   entries = [...entries, ...local.filter(l => !entries.find(e => e.id === l.id))];
 
@@ -4700,7 +4706,7 @@ async function renderClientDiario(content) {
     `;
   }
 
-  document.getElementById('diary-list').innerHTML = html ||
+  listEl.innerHTML = html ||
     `<div style="text-align:center; padding:48px 0; color:var(--txt-muted);">
       <div style="font-size:36px; margin-bottom:12px; opacity:0.3;">📓</div>
       <div style="font-size:14px;">Nenhum registro ainda</div>
@@ -4709,10 +4715,12 @@ async function renderClientDiario(content) {
 }
 
 async function renderClientHistorico(content) {
+  const clientSnapshot = CURRENT_CLIENT;
+
   content.innerHTML = `
     <div class="detail-header">
       <div class="detail-title">Histórico de Métricas</div>
-      <button class="btn-small" onclick="addMetricsMonth()">+ Mês</button>
+      <button class="btn-small" onclick="addMetricsMonth(event)">+ Mês</button>
     </div>
 
     <div class="table-wrapper">
@@ -4735,7 +4743,7 @@ async function renderClientHistorico(content) {
     </div>
   `;
 
-  if (!CURRENT_CLIENT) return;
+  if (!clientSnapshot) return;
 
   let records = [];
 
@@ -4743,15 +4751,19 @@ async function renderClientHistorico(content) {
     const { data, error } = await SB
       .from('metricas_mensais')
       .select('*')
-      .eq('client_id', CURRENT_CLIENT.id)
+      .eq('client_id', clientSnapshot.id)
       .order('ano', { ascending: false })
       .order('mes', { ascending: false });
     if (!error && data && data.length > 0) records = data;
   } catch(e) {}
 
+  // Guard: if user navigated away, don't update stale DOM
+  const bodyEl = document.getElementById('historico-body');
+  if (!bodyEl) return;
+
   // Merge with localStorage fallback
   if (records.length === 0) {
-    const key = `historico_${CURRENT_CLIENT.id}`;
+    const key = `historico_${clientSnapshot.id}`;
     records = JSON.parse(localStorage.getItem(key) || '[]');
   }
 
@@ -4776,7 +4788,7 @@ async function renderClientHistorico(content) {
     `;
   }
 
-  document.getElementById('historico-body').innerHTML = html ||
+  bodyEl.innerHTML = html ||
     '<tr><td colspan="7" style="color:var(--txt-muted); text-align:center; padding:24px;">Nenhum dado ainda — clique em "+ Mês" para adicionar</td></tr>';
 }
 
@@ -6326,16 +6338,28 @@ function calcAllScores() {
 
 // ===== MODAL MANAGEMENT =====
 function openModal(id) {
-  document.getElementById(id).classList.add('show');
+  const el = document.getElementById(id);
+  if (!el) { console.error('[IDX] Modal não encontrado:', id); return; }
+  el.classList.add('show');
+  // Prevent body scroll while modal is open
+  document.body.style.overflow = 'hidden';
 }
 
 function closeModal(id) {
-  document.getElementById(id).classList.remove('show');
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('show');
+  // Restore scroll
+  const anyOpen = document.querySelectorAll('.modal.show').length > 0;
+  if (!anyOpen) document.body.style.overflow = '';
 }
 
 document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal')) {
+  // Only close modal when clicking directly on the overlay backdrop (not its children)
+  if (e.target.classList.contains('modal') && e.target.classList.contains('show')) {
     e.target.classList.remove('show');
+    const anyOpen = document.querySelectorAll('.modal.show').length > 0;
+    if (!anyOpen) document.body.style.overflow = '';
   }
 });
 
@@ -6492,15 +6516,31 @@ function saveTestData(objectiveId) {
   showToast('Dados de testes salvos', 'success');
 }
 
-function addDiaryEntry() {
-  // Pre-fill today's date
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('md-data').value = today;
-  document.getElementById('md-titulo').value = '';
-  document.getElementById('md-conteudo').value = '';
-  document.getElementById('md-tipo').value = 'nota';
-  openModal('mo-diary');
-  setTimeout(() => document.getElementById('md-titulo')?.focus(), 100);
+function addDiaryEntry(evt) {
+  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+  try {
+    const dateEl    = document.getElementById('md-data');
+    const titleEl   = document.getElementById('md-titulo');
+    const contentEl = document.getElementById('md-conteudo');
+    const tipoEl    = document.getElementById('md-tipo');
+
+    if (!dateEl || !titleEl || !contentEl || !tipoEl) {
+      showToast('Erro interno: modal não encontrado. Recarregue a página.', 'error');
+      console.error('[IDX] Elementos do modal mo-diary não encontrados');
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    dateEl.value    = today;
+    titleEl.value   = '';
+    contentEl.value = '';
+    tipoEl.value    = 'nota';
+    openModal('mo-diary');
+    setTimeout(() => titleEl.focus(), 100);
+  } catch(e) {
+    console.error('[IDX] Erro em addDiaryEntry:', e);
+    showToast('Erro ao abrir diário: ' + (e.message || e), 'error');
+  }
 }
 
 async function saveDiaryEntry() {
@@ -6540,18 +6580,40 @@ async function saveDiaryEntry() {
   if (content && CURRENT_SUB_TAB === 'diario') renderClientDiario(content);
 }
 
-function addMetricsMonth() {
-  const now = new Date();
-  document.getElementById('mhm-mes').value = now.getMonth() + 1;
-  document.getElementById('mhm-ano').value = now.getFullYear();
-  document.getElementById('mhm-inv').value = '';
-  document.getElementById('mhm-contatos').value = '';
-  document.getElementById('mhm-cpa').value = '';
-  document.getElementById('mhm-ctr').value = '';
-  document.getElementById('mhm-cpm').value = '';
-  document.getElementById('mhm-cpc').value = '';
-  document.getElementById('mhm-obs').value = '';
-  openModal('mo-metrics-month');
+function addMetricsMonth(evt) {
+  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+  try {
+    const mesEl      = document.getElementById('mhm-mes');
+    const anoEl      = document.getElementById('mhm-ano');
+    const invEl      = document.getElementById('mhm-inv');
+    const contatosEl = document.getElementById('mhm-contatos');
+    const cpaEl      = document.getElementById('mhm-cpa');
+    const ctrEl      = document.getElementById('mhm-ctr');
+    const cpmEl      = document.getElementById('mhm-cpm');
+    const cpcEl      = document.getElementById('mhm-cpc');
+    const obsEl      = document.getElementById('mhm-obs');
+
+    if (!mesEl || !anoEl) {
+      showToast('Erro interno: modal de histórico não encontrado. Recarregue a página.', 'error');
+      console.error('[IDX] Elementos do modal mo-metrics-month não encontrados');
+      return;
+    }
+
+    const now = new Date();
+    mesEl.value      = now.getMonth() + 1;
+    anoEl.value      = now.getFullYear();
+    if (invEl)      invEl.value      = '';
+    if (contatosEl) contatosEl.value = '';
+    if (cpaEl)      cpaEl.value      = '';
+    if (ctrEl)      ctrEl.value      = '';
+    if (cpmEl)      cpmEl.value      = '';
+    if (cpcEl)      cpcEl.value      = '';
+    if (obsEl)      obsEl.value      = '';
+    openModal('mo-metrics-month');
+  } catch(e) {
+    console.error('[IDX] Erro em addMetricsMonth:', e);
+    showToast('Erro ao abrir histórico: ' + (e.message || e), 'error');
+  }
 }
 
 async function saveMetricsMonth() {
