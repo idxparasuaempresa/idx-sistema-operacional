@@ -4780,32 +4780,382 @@ async function renderClientHistorico(content) {
     '<tr><td colspan="7" style="color:var(--txt-muted); text-align:center; padding:24px;">Nenhum dado ainda — clique em "+ Mês" para adicionar</td></tr>';
 }
 
-function renderClientBenchmarks(content) {
+// ===== BENCHMARKS v2 =====
+
+// Banco interno de benchmarks por nicho (Meta Ads — mercado brasileiro 2025)
+// Fontes: WordStream BR, estudos Subido, dados agregados de contas locais
+const INDUSTRY_BENCHMARKS = {
+  'clinica_saude': {
+    label: '🏥 Clínica / Saúde (Médico, Dentista, Fisio)',
+    cpm: 18, cpc: 1.20, ctr: 1.50, hook_rate: 28, connect_rate: 22,
+    cpa_whats: 12, cpa_lead: 15, freq_max: 2.5, taxa_conv_lp: 8, roas: 0,
+    obs: 'Saúde tem CPM médio. Foco em WhatsApp/agendamento. Frequência max 2.5x por ser público local menor.'
+  },
+  'pet': {
+    label: '🐾 Pet Shop / Veterinário',
+    cpm: 14, cpc: 0.90, ctr: 1.80, hook_rate: 32, connect_rate: 28,
+    cpa_whats: 8, cpa_lead: 10, freq_max: 3.0, taxa_conv_lp: 10, roas: 0,
+    obs: 'Alta afinidade emocional. Criativos com animais geram hook rate acima da média. Público se engaja bem.'
+  },
+  'academia_fitness': {
+    label: '💪 Academia / Fitness / Personal',
+    cpm: 16, cpc: 1.00, ctr: 1.60, hook_rate: 34, connect_rate: 24,
+    cpa_whats: 10, cpa_lead: 12, freq_max: 2.8, taxa_conv_lp: 9, roas: 0,
+    obs: 'Janeiro–Março e Setembro são os melhores meses. Transformações e depoimentos convertem muito.'
+  },
+  'estetica_beleza': {
+    label: '💄 Estética / Salão / Beleza',
+    cpm: 15, cpc: 0.85, ctr: 1.90, hook_rate: 35, connect_rate: 30,
+    cpa_whats: 7, cpa_lead: 9, freq_max: 3.0, taxa_conv_lp: 11, roas: 0,
+    obs: 'Público altamente visual. Reels de transformação performam muito. Público menor → frequência sobe rápido.'
+  },
+  'restaurante_food': {
+    label: '🍽️ Restaurante / Food / Delivery',
+    cpm: 12, cpc: 0.70, ctr: 2.00, hook_rate: 30, connect_rate: 20,
+    cpa_whats: 6, cpa_lead: 8, freq_max: 3.5, taxa_conv_lp: 12, roas: 0,
+    obs: 'CPM baixo, volume alto. Foco em alcance local. CTR alto quando o criativo mostra o prato. Promoções convertem.'
+  },
+  'autoescola': {
+    label: '🚗 Autoescola / CNH',
+    cpm: 13, cpc: 0.80, ctr: 1.70, hook_rate: 25, connect_rate: 26,
+    cpa_whats: 9, cpa_lead: 11, freq_max: 3.0, taxa_conv_lp: 9, roas: 0,
+    obs: 'Ciclo de decisão mais longo. Lead form converte bem. Remarketing de quem visitou a LP é essencial.'
+  },
+  'imoveis': {
+    label: '🏠 Imobiliária / Incorporadora / Loteamento',
+    cpm: 24, cpc: 2.50, ctr: 1.20, hook_rate: 22, connect_rate: 15,
+    cpa_whats: 35, cpa_lead: 45, freq_max: 2.0, taxa_conv_lp: 5, roas: 0,
+    obs: 'Ticket alto = CPA alto é normal. CPM caro por concorrência. Foco em qualidade do lead, não volume. LP detalhada.'
+  },
+  'construcao_reforma': {
+    label: '🔨 Construção / Reforma / Decoração',
+    cpm: 17, cpc: 1.30, ctr: 1.40, hook_rate: 24, connect_rate: 20,
+    cpa_whats: 14, cpa_lead: 18, freq_max: 2.5, taxa_conv_lp: 7, roas: 0,
+    obs: 'Nicho de alta intenção. Portfólio visual converte. Foco em resultado (antes/depois). Lead form simples performa.'
+  },
+  'educacao_cursos': {
+    label: '📚 Educação / Cursos / Escola',
+    cpm: 20, cpc: 1.80, ctr: 1.30, hook_rate: 26, connect_rate: 18,
+    cpa_whats: 18, cpa_lead: 22, freq_max: 2.5, taxa_conv_lp: 6, roas: 0,
+    obs: 'CPM sobe em período de matrículas. Benefícios concretos (empregabilidade, salário) convertem mais que conteúdo.'
+  },
+  'ecommerce_moda': {
+    label: '👗 E-commerce Moda / Vestuário',
+    cpm: 22, cpc: 1.60, ctr: 1.50, hook_rate: 30, connect_rate: 0,
+    cpa_whats: 0, cpa_lead: 0, freq_max: 3.5, taxa_conv_lp: 3.5, roas: 3.5,
+    obs: 'ROAS benchmark 3.5x+. CTR visual alto. Remarketing de carrinho é ouro. Coleções novas resetam frequência.'
+  },
+  'ecommerce_cosmeticos': {
+    label: '💊 E-commerce Cosméticos / Suplementos',
+    cpm: 25, cpc: 1.80, ctr: 1.40, hook_rate: 28, connect_rate: 0,
+    cpa_whats: 0, cpa_lead: 0, freq_max: 3.5, taxa_conv_lp: 4.0, roas: 4.0,
+    obs: 'Nichos regulados têm custo maior. UGC/depoimentos reais convertem melhor. ROAS 4x+ é o alvo.'
+  },
+  'servicos_locais': {
+    label: '🔧 Serviços Locais (Outros)',
+    cpm: 15, cpc: 1.00, ctr: 1.60, hook_rate: 25, connect_rate: 22,
+    cpa_whats: 10, cpa_lead: 13, freq_max: 3.0, taxa_conv_lp: 8, roas: 0,
+    obs: 'Valores médios para serviços locais em geral. Ajuste os campos conforme o nicho específico do cliente.'
+  },
+  'gás_conveniencia': {
+    label: '⛽ Gás / Conveniência / Revenda',
+    cpm: 10, cpc: 0.60, ctr: 2.20, hook_rate: 20, connect_rate: 30,
+    cpa_whats: 5, cpa_lead: 7, freq_max: 4.0, taxa_conv_lp: 12, roas: 0,
+    obs: 'CPM baixo, público amplo. Ciclo de decisão rápido (produto de necessidade). Preço e praticidade convertem.'
+  },
+  'advocacia_juridico': {
+    label: '⚖️ Advocacia / Jurídico',
+    cpm: 22, cpc: 2.20, ctr: 1.10, hook_rate: 20, connect_rate: 16,
+    cpa_whats: 28, cpa_lead: 35, freq_max: 2.0, taxa_conv_lp: 5, roas: 0,
+    obs: 'Regulação da OAB limita criativos. CPA alto é normal pelo ticket. Lead de qualidade > volume.'
+  },
+  'tecnologia_saas': {
+    label: '💻 Tecnologia / SaaS / Software',
+    cpm: 28, cpc: 3.00, ctr: 1.10, hook_rate: 22, connect_rate: 14,
+    cpa_whats: 40, cpa_lead: 55, freq_max: 2.0, taxa_conv_lp: 4, roas: 0,
+    obs: 'CPM mais caro. Ciclo de decisão longo. Demo/trial reduz CPA. Sequência de nurturing é essencial.'
+  }
+};
+
+const BM_FIELDS = [
+  { key: 'cpm',           label: 'CPM',              prefix: 'R$ ', suffix: '',   desc: 'Custo por 1.000 impressões', lower_better: true },
+  { key: 'cpc',           label: 'CPC',              prefix: 'R$ ', suffix: '',   desc: 'Custo por clique', lower_better: true },
+  { key: 'ctr',           label: 'CTR',              prefix: '',    suffix: '%',  desc: 'Taxa de cliques (Cliques/Impressões × 100)', lower_better: false },
+  { key: 'hook_rate',     label: 'Hook Rate',        prefix: '',    suffix: '%',  desc: 'Retenção dos 1s iniciais do vídeo', lower_better: false },
+  { key: 'connect_rate',  label: 'Connect Rate',     prefix: '',    suffix: '%',  desc: 'Cliques que viraram contato (WhatsApp/DM)', lower_better: false },
+  { key: 'cpa_whats',     label: 'CPA WhatsApp',     prefix: 'R$ ', suffix: '',   desc: 'Custo por conversa iniciada no WhatsApp', lower_better: true },
+  { key: 'cpa_lead',      label: 'CPA Lead',         prefix: 'R$ ', suffix: '',   desc: 'Custo por lead (formulário)', lower_better: true },
+  { key: 'freq_max',      label: 'Frequência Máx.',  prefix: '',    suffix: 'x',  desc: 'Limite antes de saturação', lower_better: true },
+  { key: 'taxa_conv_lp',  label: 'Conv. Landing Page', prefix: '', suffix: '%',  desc: '% de visitas que convertem na LP', lower_better: false },
+  { key: 'roas',          label: 'ROAS Mínimo',      prefix: '',    suffix: 'x',  desc: 'Retorno sobre gasto em anúncios (e-commerce)', lower_better: false }
+];
+
+// Storage em memória por cliente (cache local)
+const _BM_CACHE = {};
+
+function bmLoadLocal(clientId) {
+  try {
+    const raw = localStorage.getItem(`bm_${clientId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function bmSaveLocal(clientId, data) {
+  try { localStorage.setItem(`bm_${clientId}`, JSON.stringify(data)); } catch {}
+}
+
+async function bmLoadFromSupabase(clientId) {
+  try {
+    const { data, error } = await SB
+      .from('client_benchmarks')
+      .select('*')
+      .eq('client_id', clientId)
+      .single();
+    if (error || !data) return null;
+    return data;
+  } catch { return null; }
+}
+
+async function bmSaveToSupabase(clientId, payload) {
+  try {
+    await SB.from('client_benchmarks').upsert({
+      client_id: clientId,
+      ...payload,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'client_id' });
+  } catch (e) { console.warn('bm supabase save:', e); }
+}
+
+async function renderClientBenchmarks(content) {
   const c = CURRENT_CLIENT;
+  content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--txt-muted);">Carregando benchmarks…</div>`;
+
+  // Tenta carregar do Supabase, senão do localStorage
+  let saved = bmLoadLocal(c.id);
+  const sbData = await bmLoadFromSupabase(c.id);
+  if (sbData) { saved = sbData; bmSaveLocal(c.id, sbData); }
+
+  _BM_CACHE[c.id] = saved || {};
+  bmRenderUI(content, c, saved);
+}
+
+function bmRenderUI(content, c, saved) {
+  const s = saved || {};
+  const nichoSelecionado = s.nicho_ref || '';
+  const ref = INDUSTRY_BENCHMARKS[nichoSelecionado] || null;
+
+  // Gera linhas da tabela para cada campo
+  const rows = BM_FIELDS.map(f => {
+    const refVal  = ref ? (ref[f.key] || 0) : null;
+    const metaVal = s[`meta_${f.key}`] !== undefined ? s[`meta_${f.key}`] : '';
+    const refDisplay = refVal !== null && refVal > 0
+      ? `<span style="color:var(--txt-secondary);">${f.prefix}${refVal}${f.suffix}</span>`
+      : `<span style="color:var(--txt-muted);">—</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight:600;font-size:12px;color:var(--txt-primary);">${f.label}</div>
+          <div style="font-size:10px;color:var(--txt-muted);margin-top:2px;">${f.desc}</div>
+        </td>
+        <td style="text-align:center;">${refDisplay}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;color:var(--txt-muted);white-space:nowrap;">${f.prefix}</span>
+            <input
+              type="number"
+              step="0.01"
+              class="bm-input"
+              data-field="${f.key}"
+              value="${metaVal}"
+              placeholder="${refVal && refVal > 0 ? refVal : '—'}"
+              oninput="bmMarkDirty()"
+              style="width:90px;background:var(--bg-base);border:1px solid var(--border-light);color:var(--txt-primary);padding:6px 8px;border-radius:var(--radius);font-family:var(--mono);font-size:12px;">
+            <span style="font-size:11px;color:var(--txt-muted);">${f.suffix}</span>
+          </div>
+        </td>
+        <td style="text-align:center;">
+          ${metaVal !== '' && refVal !== null && refVal > 0
+            ? bmCompareCell(parseFloat(metaVal), refVal, f.lower_better)
+            : '<span style="color:var(--txt-muted);font-size:10px;">—</span>'}
+        </td>
+      </tr>`;
+  }).join('');
+
+  const nichoOptions = Object.entries(INDUSTRY_BENCHMARKS)
+    .map(([k, v]) => `<option value="${k}" ${k === nichoSelecionado ? 'selected' : ''}>${v.label}</option>`)
+    .join('');
+
   content.innerHTML = `
     <div class="detail-header">
-      <div class="detail-title">Benchmarks</div>
+      <div class="detail-title">🎯 Benchmarks — ${c.nome}</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-small" id="bm-save-btn" onclick="bmSave('${c.id}')" style="display:none;">💾 Salvar</button>
+        <button class="btn-small" onclick="bmClearAll('${c.id}')">🗑 Limpar</button>
+      </div>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-label">CPA META</div>
-        <div class="card-value">${fmtR(c.cpa_meta || 0)}</div>
+    <!-- SELETOR DE NICHO -->
+    <div class="section">
+      <div class="section-title">📂 REFERÊNCIA DO SETOR</div>
+      <div style="font-size:11px;color:var(--txt-muted);margin-bottom:12px;">
+        Selecione o ramo do cliente para carregar automaticamente os benchmarks médios do mercado brasileiro (Meta Ads 2024–2025). Use como referência — ajuste as metas para a realidade do cliente.
       </div>
-      <div class="card">
-        <div class="card-label">CPM META</div>
-        <div class="card-value">${fmtR(c.cpm_meta || 0)}</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="bm-nicho-sel" onchange="bmApplyNicho('${c.id}')" style="flex:1;min-width:260px;background:var(--bg-base);border:1px solid var(--border-light);color:var(--txt-primary);padding:9px 12px;border-radius:var(--radius);font-size:12px;">
+          <option value="">— Selecione o ramo do cliente —</option>
+          ${nichoOptions}
+        </select>
+        ${nichoSelecionado ? `<button class="btn-small" onclick="bmClearNicho('${c.id}')">✕ Remover referência</button>` : ''}
       </div>
-      <div class="card">
-        <div class="card-label">CTR META</div>
-        <div class="card-value">${fmtP(c.ctr_meta || 0)}</div>
+      ${ref ? `<div style="margin-top:10px;padding:10px 14px;background:var(--surf-2);border:1px solid var(--border-light);border-radius:var(--radius);font-size:11px;color:var(--txt-muted);line-height:1.6;">${ref.obs}</div>` : ''}
+    </div>
+
+    <!-- TABELA DE BENCHMARKS -->
+    <div class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="section-title" style="margin:0;">📊 METAS DO CLIENTE</div>
+        <div style="font-size:10px;color:var(--txt-muted);">Edite os campos e salve. Os valores serão usados no Dashboard Meta para comparação de performance.</div>
       </div>
-      <div class="card">
-        <div class="card-label">CPC META</div>
-        <div class="card-value">${fmtR(c.cpc_meta || 0)}</div>
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th style="min-width:180px;">MÉTRICA</th>
+            <th style="text-align:center;min-width:120px;">REFERÊNCIA DO SETOR</th>
+            <th style="min-width:140px;">META DO CLIENTE</th>
+            <th style="text-align:center;min-width:120px;">VS. SETOR</th>
+          </tr></thead>
+          <tbody id="bm-table-body">${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+        <div style="font-size:10px;color:var(--txt-muted);">🟢 Meta melhor que o setor · 🟡 Meta próxima ao setor · 🔴 Meta abaixo do setor</div>
+        <button class="btn-primary" id="bm-save-btn-bottom" onclick="bmSave('${c.id}')">💾 Salvar Metas</button>
+      </div>
+    </div>
+
+    <!-- OBSERVAÇÕES -->
+    <div class="section">
+      <div class="section-title">📝 OBSERVAÇÕES DO BENCHMARK</div>
+      <textarea id="bm-obs" rows="4" oninput="bmMarkDirty()"
+        style="width:100%;background:var(--bg-base);border:1px solid var(--border-light);color:var(--txt-primary);padding:10px;border-radius:var(--radius);font-size:12px;resize:vertical;font-family:inherit;"
+        placeholder="Contexto específico do cliente, sazonalidade, características do público, histórico de performance...">${s.obs || ''}</textarea>
+    </div>
+
+    <!-- LEGENDA DOS NICHOS -->
+    <div class="section">
+      <div class="section-title">📖 SOBRE OS BENCHMARKS DE REFERÊNCIA</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        ${Object.entries(INDUSTRY_BENCHMARKS).map(([k, v]) => `
+          <div class="card" style="cursor:pointer;${k === nichoSelecionado ? 'border-color:var(--accent);' : ''}" onclick="bmSetNicho('${c.id}','${k}')">
+            <div style="font-size:12px;font-weight:600;color:var(--txt-primary);">${v.label}</div>
+            <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">CPM ~R$${v.cpm} · CTR ~${v.ctr}% · CPA ~R$${v.cpa_whats||v.cpa_lead||'—'}</div>
+          </div>`).join('')}
       </div>
     </div>
   `;
+}
+
+function bmCompareCell(meta, ref, lowerBetter) {
+  if (!ref || ref === 0) return '<span style="color:var(--txt-muted);font-size:10px;">—</span>';
+  const ratio = meta / ref;
+  let icon, color, label;
+  if (lowerBetter) {
+    if (ratio <= 0.9)       { icon = '🟢'; color = 'var(--green)'; label = `${((1-ratio)*100).toFixed(0)}% melhor`; }
+    else if (ratio <= 1.15) { icon = '🟡'; color = 'var(--yellow)'; label = 'Similar ao setor'; }
+    else                    { icon = '🔴'; color = 'var(--red)';  label = `${((ratio-1)*100).toFixed(0)}% acima`; }
+  } else {
+    if (ratio >= 1.1)       { icon = '🟢'; color = 'var(--green)'; label = `${((ratio-1)*100).toFixed(0)}% melhor`; }
+    else if (ratio >= 0.85) { icon = '🟡'; color = 'var(--yellow)'; label = 'Similar ao setor'; }
+    else                    { icon = '🔴'; color = 'var(--red)';  label = `${((1-ratio)*100).toFixed(0)}% abaixo`; }
+  }
+  return `<span style="font-size:11px;color:${color};">${icon} ${label}</span>`;
+}
+
+function bmMarkDirty() {
+  const btn = document.getElementById('bm-save-btn');
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+function bmCollectValues() {
+  const vals = {};
+  document.querySelectorAll('.bm-input').forEach(inp => {
+    const v = inp.value.trim();
+    vals[`meta_${inp.dataset.field}`] = v !== '' ? parseFloat(v) : null;
+  });
+  vals.obs = document.getElementById('bm-obs')?.value || '';
+  vals.nicho_ref = document.getElementById('bm-nicho-sel')?.value || '';
+  return vals;
+}
+
+async function bmSave(clientId) {
+  const payload = bmCollectValues();
+  bmSaveLocal(clientId, payload);
+  _BM_CACHE[clientId] = payload;
+
+  // Sincronizar metas principais de volta ao cliente (para uso no dashboard Meta)
+  const c = CLIENTES.find(x => x.id === clientId);
+  if (c) {
+    if (payload.meta_cpa_whats || payload.meta_cpa_lead)
+      c.cpa_meta = payload.meta_cpa_whats || payload.meta_cpa_lead;
+    if (payload.meta_cpm) c.cpm_meta = payload.meta_cpm;
+    if (payload.meta_ctr) c.ctr_meta = payload.meta_ctr;
+    if (payload.meta_cpc) c.cpc_meta = payload.meta_cpc;
+  }
+
+  bmSaveToSupabase(clientId, payload);
+  showToast('Benchmarks salvos', 'success');
+  const btn = document.getElementById('bm-save-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+function bmApplyNicho(clientId) {
+  const sel = document.getElementById('bm-nicho-sel');
+  const nicho = sel?.value;
+  if (!nicho) return;
+  const ref = INDUSTRY_BENCHMARKS[nicho];
+  if (!ref) return;
+
+  // Preenche inputs com valores do setor como ponto de partida
+  document.querySelectorAll('.bm-input').forEach(inp => {
+    const key = inp.dataset.field;
+    if (ref[key] !== undefined && ref[key] > 0) {
+      inp.value = ref[key];
+    }
+  });
+
+  bmMarkDirty();
+
+  // Re-render para mostrar observação do nicho
+  const saved = bmCollectValues();
+  saved.nicho_ref = nicho;
+  bmSaveLocal(clientId, saved);
+  _BM_CACHE[clientId] = saved;
+  renderClientBenchmarks(document.getElementById('main-content'));
+}
+
+function bmSetNicho(clientId, nicho) {
+  const saved = _BM_CACHE[clientId] || {};
+  saved.nicho_ref = nicho;
+  bmSaveLocal(clientId, saved);
+  _BM_CACHE[clientId] = saved;
+  renderClientBenchmarks(document.getElementById('main-content'));
+}
+
+function bmClearNicho(clientId) {
+  const saved = _BM_CACHE[clientId] || {};
+  delete saved.nicho_ref;
+  bmSaveLocal(clientId, saved);
+  _BM_CACHE[clientId] = saved;
+  renderClientBenchmarks(document.getElementById('main-content'));
+}
+
+async function bmClearAll(clientId) {
+  if (!confirm('Limpar todos os benchmarks deste cliente?')) return;
+  _BM_CACHE[clientId] = {};
+  bmSaveLocal(clientId, {});
+  bmSaveToSupabase(clientId, {});
+  renderClientBenchmarks(document.getElementById('main-content'));
+  showToast('Benchmarks limpos', 'success');
 }
 
 function backToClientes() {
