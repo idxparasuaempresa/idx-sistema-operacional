@@ -1621,9 +1621,36 @@ const SUB_TABS = [
   { id: 'meta-dashboard', label: '📊 Dashboard Meta' },
   { id: 'testes', label: '🧪 Testes' },
   { id: 'estrategias', label: '🗺️ Estratégias' },
+  { id: 'rotina', label: '📅 Rotina' },
   { id: 'diario', label: '📓 Diário' },
   { id: 'historico', label: '📈 Histórico' },
   { id: 'benchmarks', label: '🎯 Benchmarks' }
+];
+
+// ============================================================
+// ROTINA POR CLIENTE — Tarefas baseadas na metodologia Subido
+// Objetivo: rastrear execução diária/semanal/mensal por cliente
+// ============================================================
+const RC_DIARIO = [
+  { key: 'rd1', label: '💰 Verificar gasto vs. orçamento diário (pacing acelerado ou lento?)' },
+  { key: 'rd2', label: '🎯 CPA real vs. meta do cliente — dentro ou fora?' },
+  { key: 'rd3', label: '📊 CTR e CPM das campanhas ativas (queda = saturação ou segmentação errada)' },
+  { key: 'rd4', label: '📲 Leads/contatos gerados no dia (qualidade + volume)' },
+  { key: 'rd5', label: '📝 Observação registrada no diário do cliente' },
+];
+const RC_SEMANAL = [
+  { key: 'rs1', label: '📋 Performance semanal analisada: CPM, CPC, CTR, CPA vs. meta' },
+  { key: 'rs2', label: '📨 Relatório semanal enviado para o cliente (WhatsApp ou e-mail)' },
+  { key: 'rs3', label: '🎨 Ao menos 1 novo criativo ou variação lançada' },
+  { key: 'rs4', label: '👥 Segmentação e públicos revisados (temperatura, tamanho, exclusões)' },
+  { key: 'rs5', label: '✅ Pixel e rastreamento de conversões verificados' },
+];
+const RC_MENSAL = [
+  { key: 'rm1', label: '📊 Métricas finais do mês consolidadas (investimento, CPA real, conversões)' },
+  { key: 'rm2', label: '📄 Relatório mensal completo enviado com leitura estratégica' },
+  { key: 'rm3', label: '🤝 Reunião de alinhamento realizada com apresentação de resultados' },
+  { key: 'rm4', label: '🎯 Estratégia, orçamento e metas do próximo mês revisados' },
+  { key: 'rm5', label: '💰 Cobrança emitida e contrato/renovação verificados' },
 ];
 
 const ROTINA_MANHA = [
@@ -2578,6 +2605,9 @@ function loadClientDetailContent(tabId) {
     case 'estrategias':
       renderClientEstrategias(content);
       break;
+    case 'rotina':
+      renderClientRotina(content);
+      break;
     case 'diario':
       renderClientDiario(content);
       break;
@@ -3235,6 +3265,280 @@ function loadTestesView() {
 let ESTRATEGIAS_DATA = [];
 let ESTRATEGIA_CURRENT_ID = null;
 let ESTRATEGIA_AUTOSAVE_TIMER = null;
+
+// ============================================================
+// ===== ROTINA POR CLIENTE — Engine completo               =====
+// ============================================================
+
+// ---- LocalStorage helpers ----
+function rcLoadState(clientId, type) {
+  const key = `rc_${clientId}_${type}_${clGetPeriodKey(type)}`;
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); }
+  catch(e) { return {}; }
+}
+function rcSaveState(clientId, type, state) {
+  const key = `rc_${clientId}_${type}_${clGetPeriodKey(type)}`;
+  localStorage.setItem(key, JSON.stringify(state));
+}
+
+// ---- Supabase persistence ----
+async function rcPersistToSupabase(clientId, type, itemKey, done) {
+  if (!SB) return;
+  try {
+    await SB.from('rotina_cliente_execucoes').upsert({
+      client_id: clientId,
+      tipo: type,
+      periodo: clGetPeriodKey(type),
+      item_key: itemKey,
+      concluido: done,
+      concluido_em: done ? new Date().toISOString() : null
+    }, { onConflict: 'client_id,tipo,periodo,item_key' });
+  } catch(e) { console.warn('[IDX] rcPersistToSupabase:', e.message); }
+}
+
+async function rcSyncFromSupabase(clientId) {
+  if (!SB) return;
+  try {
+    const periods = [
+      clGetPeriodKey('diario'),
+      clGetPeriodKey('semanal'),
+      clGetPeriodKey('mensal')
+    ];
+    const { data, error } = await SB
+      .from('rotina_cliente_execucoes')
+      .select('tipo,periodo,item_key,concluido,concluido_em')
+      .eq('client_id', clientId)
+      .in('periodo', periods);
+    if (error || !data) return;
+    const rebuilt = {};
+    for (const row of data) {
+      const lsKey = `rc_${clientId}_${row.tipo}_${row.periodo}`;
+      if (!rebuilt[lsKey]) rebuilt[lsKey] = {};
+      rebuilt[lsKey][row.item_key] = row.concluido;
+      if (row.concluido && row.concluido_em) {
+        const d = new Date(row.concluido_em);
+        rebuilt[lsKey][row.item_key + '_time'] = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      }
+    }
+    for (const [key, state] of Object.entries(rebuilt)) {
+      localStorage.setItem(key, JSON.stringify(state));
+    }
+  } catch(e) { console.warn('[IDX] rcSyncFromSupabase:', e.message); }
+}
+
+// Sync all clients for the compliance overview (loads month data for all clients)
+async function rcSyncAllClientsMonth() {
+  if (!SB) return {};
+  try {
+    const mes = clGetPeriodKey('mensal');
+    const mesPrefix = mes.substring(0, 7); // YYYY-MM
+    const { data, error } = await SB
+      .from('rotina_cliente_execucoes')
+      .select('client_id,tipo,periodo,item_key,concluido')
+      .or(`tipo.eq.semanal,tipo.eq.mensal`)
+      .like('periodo', `${mesPrefix}%`);
+
+    // Also fetch all daily records of the month
+    const { data: dataD } = await SB
+      .from('rotina_cliente_execucoes')
+      .select('client_id,tipo,periodo,item_key,concluido')
+      .eq('tipo', 'diario')
+      .gte('periodo', `${mesPrefix}-01`)
+      .lte('periodo', `${mesPrefix}-31`);
+
+    return [...(data || []), ...(dataD || [])];
+  } catch(e) {
+    console.warn('[IDX] rcSyncAllClientsMonth:', e.message);
+    return [];
+  }
+}
+
+// ---- Toggle with dual persistence ----
+function rcToggle(clientId, type, itemKey) {
+  const state = rcLoadState(clientId, type);
+  const wasChecked = !!state[itemKey];
+  state[itemKey] = !wasChecked;
+  if (!wasChecked) state[itemKey + '_time'] = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  else delete state[itemKey + '_time'];
+  rcSaveState(clientId, type, state);
+  rcPersistToSupabase(clientId, type, itemKey, state[itemKey]);
+
+  // Update DOM immediately
+  const cidShort = clientId.slice(-8);
+  const row = document.getElementById(`rc-row-${cidShort}-${type}-${itemKey}`);
+  if (row) {
+    row.classList.toggle('checked', state[itemKey]);
+    const tick = row.querySelector('.cl-checkbox-tick');
+    if (tick) tick.textContent = state[itemKey] ? '✓' : '';
+    const timeEl = row.querySelector('.cl-item-time');
+    if (timeEl) timeEl.textContent = state[itemKey + '_time'] || '';
+  }
+  // Refresh progress bar for this section
+  rcRefreshSectionProgress(clientId, type);
+}
+
+function rcRefreshSectionProgress(clientId, type) {
+  const cidShort = clientId.slice(-8);
+  const items = { diario: RC_DIARIO, semanal: RC_SEMANAL, mensal: RC_MENSAL }[type] || [];
+  const state = rcLoadState(clientId, type);
+  const done = items.filter(i => state[i.key]).length;
+  const total = items.length;
+  const pct = Math.round((done / total) * 100);
+  const pctColor = pct === 100 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--accent)';
+  const bar = document.getElementById(`rc-bar-${cidShort}-${type}`);
+  const pill = document.getElementById(`rc-pill-${cidShort}-${type}`);
+  if (bar) { bar.style.width = pct + '%'; bar.style.background = pctColor; }
+  if (pill) { pill.textContent = `${done}/${total}`; pill.style.color = pctColor; }
+}
+
+// ---- Build calendar heatmap for the current month ----
+function rcBuildCalendar(clientId) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
+
+  const days = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  // Figure out what day of week the 1st is
+  const firstDay = new Date(year, month, 1);
+  const startOffset = (firstDay.getDay() + 6) % 7; // 0=Mon
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;">`;
+  days.forEach(d => { html += `<div style="font-size:9px;font-weight:700;color:var(--txt-muted);padding:2px 0;">${d}</div>`; });
+
+  // Empty cells for offset
+  for (let i = 0; i < startOffset; i++) html += `<div></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let state = {};
+    try {
+      const stored = localStorage.getItem(`rc_${clientId}_diario_${dateStr}`);
+      if (stored) state = JSON.parse(stored);
+    } catch(e) {}
+
+    const done = RC_DIARIO.filter(i => state[i.key]).length;
+    const total = RC_DIARIO.length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const isFuture = d > today;
+    const isToday = d === today;
+
+    let bg = 'var(--surf-2)', color = 'var(--txt-muted)', border = '1px solid var(--border-light)';
+    if (isFuture)      { bg = 'var(--surf-1)'; color = 'var(--border)'; }
+    else if (pct === 100) { bg = 'var(--green)'; color = '#fff'; }
+    else if (pct >= 60)   { bg = '#d4a800'; color = '#fff'; }
+    else if (pct > 0)     { bg = 'var(--accent)'; color = '#fff'; }
+    else                  { bg = 'var(--red-bg)'; color = 'var(--red)'; }
+    if (isToday) border = '2px solid var(--accent)';
+
+    html += `<div title="${dateStr}&#10;${done}/${total} tarefas diárias" style="
+      border-radius:5px;background:${bg};color:${color};font-size:10px;
+      font-weight:${isToday?800:600};padding:5px 2px;border:${border};
+      line-height:1.1;cursor:default;
+    ">${d}${done>0&&!isFuture?`<br><span style='font-size:8px;opacity:.85'>${done}/${total}</span>`:''}</div>`;
+  }
+  html += `</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:10px;color:var(--txt-muted);">
+    <span>🟢 100%</span><span style="color:#d4a800;">🟡 60-99%</span>
+    <span style="color:var(--accent);">🟠 1-59%</span><span style="color:var(--red);">🔴 0% (dia passado)</span>
+  </div>`;
+  return html;
+}
+
+// ---- Render per-client Rotina tab ----
+async function renderClientRotina(content) {
+  const c = CURRENT_CLIENT;
+  rcRenderHTML(content, c);
+  // Sync Supabase async + re-render
+  const cidShort = c.id.slice(-8);
+  const syncEl = () => document.getElementById(`rc-sync-${cidShort}`);
+  if (syncEl()) syncEl().textContent = '⏳ sincronizando...';
+  rcSyncFromSupabase(c.id).then(() => {
+    rcRenderHTML(content, c);
+    if (syncEl()) { syncEl().textContent = '✅ sincronizado'; setTimeout(() => { if(syncEl()) syncEl().textContent=''; }, 2500); }
+  }).catch(() => { if (syncEl()) syncEl().textContent = '📴 offline (local)'; });
+}
+
+function rcRenderHTML(content, c) {
+  const cid = c.id;
+  const cidShort = cid.slice(-8);
+  const hoje = clGetPeriodKey('diario');
+  const semana = clGetPeriodKey('semanal');
+  const mes = clGetPeriodKey('mensal');
+
+  const stD = rcLoadState(cid, 'diario');
+  const stS = rcLoadState(cid, 'semanal');
+  const stM = rcLoadState(cid, 'mensal');
+
+  function buildItems(type, items, state) {
+    return items.map(item => {
+      const checked = !!state[item.key];
+      const time = state[item.key + '_time'] || '';
+      return `<div class="cl-item ${checked?'checked':''}" id="rc-row-${cidShort}-${type}-${item.key}"
+        onclick="rcToggle('${cid}','${type}','${item.key}')">
+        <div class="cl-checkbox"><span class="cl-checkbox-tick">${checked?'✓':''}</span></div>
+        <div class="cl-item-label">${item.label}</div>
+        <div class="cl-item-time">${time}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function buildCard(title, icon, type, items, state, period) {
+    const done = items.filter(i => state[i.key]).length;
+    const total = items.length;
+    const pct = Math.round((done/total)*100);
+    const pctColor = pct===100?'var(--green)':pct>=60?'var(--yellow)':'var(--accent)';
+    return `<div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:12px;letter-spacing:.5px;">${icon} ${title}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--txt-muted);">${period}</span>
+          <span id="rc-pill-${cidShort}-${type}" style="font-size:11px;font-weight:700;color:${pctColor};">${done}/${total}</span>
+        </div>
+      </div>
+      <div class="progress-bar" style="height:4px;border-radius:2px;margin-bottom:12px;">
+        <div id="rc-bar-${cidShort}-${type}" style="width:${pct}%;height:100%;background:${pctColor};border-radius:2px;transition:width .3s;"></div>
+      </div>
+      ${buildItems(type, items, state)}
+    </div>`;
+  }
+
+  const dayName = new Date().toLocaleDateString('pt-BR',{weekday:'long'});
+
+  content.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--txt-muted);font-weight:700;margin-bottom:4px;">ROTINA DO CLIENTE</div>
+        <div style="font-size:20px;font-weight:800;">${c.nome}</div>
+        <div style="color:var(--txt-muted);font-size:12px;margin-top:2px;">${dayName} · ${fmtDate(hoje)}</div>
+      </div>
+      <span id="rc-sync-${cidShort}" style="font-size:10px;color:var(--txt-muted);"></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- Coluna esquerda: Tarefas Diárias -->
+      <div>
+        ${buildCard('TAREFAS DIÁRIAS', '📅', 'diario', RC_DIARIO, stD, hoje)}
+
+        <!-- Calendário do mês -->
+        <div class="card">
+          <div style="font-weight:700;font-size:12px;letter-spacing:.5px;margin-bottom:14px;">
+            📅 CALENDÁRIO — ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).toUpperCase()}
+          </div>
+          ${rcBuildCalendar(cid)}
+        </div>
+      </div>
+
+      <!-- Coluna direita: Semanal + Mensal -->
+      <div>
+        ${buildCard('TAREFAS SEMANAIS', '📋', 'semanal', RC_SEMANAL, stS, semana)}
+        ${buildCard('TAREFAS MENSAIS', '📈', 'mensal', RC_MENSAL, stM, mes)}
+      </div>
+    </div>
+  `;
+}
 
 async function renderClientEstrategias(content) {
   // Full Apple Notes layout — list + editor
@@ -4323,44 +4627,193 @@ function addOnboardingTask() {
   showToast('Tarefa de onboarding adicionada', 'success');
 }
 
-function renderRotina(content = null) {
-  const c = content || document.getElementById('main-content');
+async function renderRotina() {
+  const content = document.getElementById('main-content');
+  const mes = clGetPeriodKey('mensal');
+  const mesNome = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+  const hoje = clGetPeriodKey('diario');
+  const semana = clGetPeriodKey('semanal');
 
-  const procedures = [
-    { title: 'ABERTURA DIÁRIA (30min)', items: ['Verificar todas as contas Meta, Google e TikTok', 'Checar CPM, CPC, CPA em relação às metas', 'Revisar campanhas pausadas ou com problemas', 'Registrar observações no diário'] },
-    { title: 'MONITORAMENTO CONTÍNUO (2x/dia)', items: ['Pacing de orçamento (deve estar alinhado)', 'Qualidade de leads/conversões', 'Notificações de erros nos pixels', 'Performance de públicos'] },
-    { title: 'OTIMIZAÇÕES (1h)', items: ['Ajustar segmentação conforme tendências', 'Testar novos criativos se CTR<meta', 'Revisar landing pages com bounce rate alto', 'Calcular ROI real por campanha'] },
-    { title: 'COMUNICAÇÃO COM CLIENTE', items: ['Responder mensagens em até 1h', 'Enviar relatório semanal', 'Sugerir ações com base em dados', 'Reunião de alinhamento (semanal)'] },
-    { title: 'ESTUDOS TÉCNICOS (1h/dia)', items: ['Acompanhar updates do Meta Ads', 'Estudar novas estratégias', 'Participar de webinars/treinamentos', 'Documentar aprendizados'] }
-  ];
-
-  let html = `
+  content.innerHTML = `
     <div class="detail-header">
-      <div class="detail-title">🔥 Rotina Operacional Padrão</div>
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--txt-muted);font-weight:700;margin-bottom:4px;">CONTROLE DE ROTINA</div>
+        <div style="font-size:20px;font-weight:800;">${mesNome}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="rotina-sync-status" style="font-size:11px;color:var(--txt-muted);">⏳ carregando...</span>
+      </div>
     </div>
+    <div id="rotina-compliance-table"><div class="card" style="text-align:center;padding:32px;color:var(--txt-muted);">Carregando dados do banco...</div></div>
+  `;
 
-    <div style="background:var(--yellow-bg); border:1px solid var(--yellow); border-radius:var(--radius-lg); padding:12px; margin-bottom:24px; display:flex; gap:12px; align-items:start;">
-      <div style="color:var(--yellow); font-size:16px;">⚠</div>
-      <div style="flex:1;">
-        <div style="font-weight:600; color:var(--yellow); margin-bottom:4px;">Rotina para Sucesso</div>
-        <div style="font-size:12px; color:var(--yellow); line-height:1.5;">Siga este checklist diariamente para manter máxima performance nas contas gerenciadas.</div>
+  // Load Supabase data for all clients this month
+  let supabaseRows = [];
+  try {
+    supabaseRows = await rcSyncAllClientsMonth();
+    const syncEl = document.getElementById('rotina-sync-status');
+    if (syncEl) syncEl.textContent = '✅ sincronizado';
+  } catch(e) {
+    const syncEl = document.getElementById('rotina-sync-status');
+    if (syncEl) syncEl.textContent = '📴 offline (local)';
+  }
+
+  if (!CLIENTES || CLIENTES.length === 0) {
+    document.getElementById('rotina-compliance-table').innerHTML = `<div class="card" style="text-align:center;padding:32px;color:var(--txt-muted);">Nenhum cliente cadastrado.</div>`;
+    return;
+  }
+
+  // Build compliance data map from Supabase rows + localStorage
+  // clientId -> { diario: {doneCount, totalExpected}, semanal: {...}, mensal: {...}, dailyMap: {date: done/total} }
+  function getComplianceForClient(clientId) {
+    // Daily: count days in month where all 5 tasks were done
+    const now = new Date();
+    const year = now.getFullYear();
+    const monthIdx = now.getMonth();
+    const today = now.getDate();
+    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+    const totalDaysSoFar = today;
+
+    let dailyFullDays = 0;
+    let dailyPartialDays = 0;
+    const dailyMap = {};
+    for (let d = 1; d <= today; d++) {
+      const dateStr = `${year}-${String(monthIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      let state = {};
+      try { const s = localStorage.getItem(`rc_${clientId}_diario_${dateStr}`); if(s) state = JSON.parse(s); } catch(e){}
+      // Merge with Supabase rows
+      for (const row of supabaseRows) {
+        if (row.client_id === clientId && row.tipo === 'diario' && row.periodo === dateStr && row.concluido) {
+          state[row.item_key] = true;
+        }
+      }
+      const done = RC_DIARIO.filter(i => state[i.key]).length;
+      dailyMap[d] = done;
+      if (done === RC_DIARIO.length) dailyFullDays++;
+      else if (done > 0) dailyPartialDays++;
+    }
+
+    // Semanal: check current week
+    let stS = rcLoadState(clientId, 'semanal');
+    for (const row of supabaseRows) {
+      if (row.client_id === clientId && row.tipo === 'semanal' && row.periodo === semana && row.concluido) stS[row.item_key] = true;
+    }
+    const semanDone = RC_SEMANAL.filter(i => stS[i.key]).length;
+
+    // Mensal: check current month
+    let stM = rcLoadState(clientId, 'mensal');
+    for (const row of supabaseRows) {
+      if (row.client_id === clientId && row.tipo === 'mensal' && row.periodo === mes && row.concluido) stM[row.item_key] = true;
+    }
+    const mensalDone = RC_MENSAL.filter(i => stM[i.key]).length;
+
+    const dailyPct = totalDaysSoFar > 0 ? Math.round((dailyFullDays / totalDaysSoFar) * 100) : 0;
+
+    return { dailyFullDays, dailyPartialDays, totalDaysSoFar, dailyPct, dailyMap,
+             semanDone, semanTotal: RC_SEMANAL.length,
+             mensalDone, mensalTotal: RC_MENSAL.length };
+  }
+
+  function pctColor(pct) {
+    return pct === 100 ? 'var(--green)' : pct >= 60 ? '#d4a800' : pct > 0 ? 'var(--accent)' : 'var(--red)';
+  }
+
+  function miniHeatmap(dailyMap, totalDays) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let html = `<div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center;">`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const done = dailyMap[d] || 0;
+      const isFuture = d > totalDays;
+      let bg = isFuture ? 'var(--surf-1)' : done === RC_DIARIO.length ? 'var(--green)' :
+               done >= 3 ? '#d4a800' : done > 0 ? 'var(--accent)' : 'var(--red-bg)';
+      html += `<div title="Dia ${d}: ${done}/${RC_DIARIO.length}" style="width:8px;height:8px;border-radius:2px;background:${bg};"></div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // Build table
+  let tableHtml = `
+    <div class="card" style="overflow-x:auto;padding:0;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:var(--surf-2);border-bottom:2px solid var(--border);">
+            <th style="text-align:left;padding:12px 14px;font-size:10px;letter-spacing:1px;color:var(--txt-muted);font-weight:700;">CLIENTE</th>
+            <th style="text-align:center;padding:12px 8px;font-size:10px;letter-spacing:1px;color:var(--txt-muted);font-weight:700;">📅 DIÁRIO<br><span style="font-weight:400;font-size:9px;">dias completos/${new Date().getDate()} dias</span></th>
+            <th style="text-align:center;padding:12px 8px;font-size:10px;letter-spacing:1px;color:var(--txt-muted);font-weight:700;">📋 SEMANAL<br><span style="font-weight:400;font-size:9px;">${RC_SEMANAL.length} tarefas</span></th>
+            <th style="text-align:center;padding:12px 8px;font-size:10px;letter-spacing:1px;color:var(--txt-muted);font-weight:700;">📈 MENSAL<br><span style="font-weight:400;font-size:9px;">${RC_MENSAL.length} tarefas</span></th>
+            <th style="text-align:left;padding:12px 14px;font-size:10px;letter-spacing:1px;color:var(--txt-muted);font-weight:700;">HISTÓRICO DO MÊS</th>
+            <th style="padding:12px 14px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  for (const cli of CLIENTES) {
+    const co = getComplianceForClient(cli.id);
+    const dPct = co.dailyPct;
+    const sPct = Math.round((co.semanDone / co.semanTotal) * 100);
+    const mPct = Math.round((co.mensalDone / co.mensalTotal) * 100);
+
+    function badge(done, total, pct) {
+      const c = pctColor(pct);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <span style="font-size:16px;font-weight:800;color:${c};">${done}<span style="font-size:10px;color:var(--txt-muted);">/${total}</span></span>
+        <div style="width:50px;height:5px;background:var(--surf-2);border-radius:3px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${c};border-radius:3px;"></div>
+        </div>
+        <span style="font-size:9px;color:${c};font-weight:700;">${pct}%</span>
+      </div>`;
+    }
+
+    tableHtml += `
+      <tr style="border-bottom:1px solid var(--border-light);" onmouseenter="this.style.background='var(--surf-2)'" onmouseleave="this.style.background=''">
+        <td style="padding:12px 14px;">
+          <div style="font-weight:700;font-size:13px;">${cli.nome}</div>
+          <div style="font-size:10px;color:var(--txt-muted);">${cli.nicho||'—'}</div>
+        </td>
+        <td style="text-align:center;padding:12px 8px;">${badge(co.dailyFullDays, co.totalDaysSoFar, dPct)}</td>
+        <td style="text-align:center;padding:12px 8px;">${badge(co.semanDone, co.semanTotal, sPct)}</td>
+        <td style="text-align:center;padding:12px 8px;">${badge(co.mensalDone, co.mensalTotal, mPct)}</td>
+        <td style="padding:12px 14px;">${miniHeatmap(co.dailyMap, co.totalDaysSoFar)}</td>
+        <td style="padding:12px 14px;">
+          <button class="btn-small" onclick="openClient('${cli.id}');setTimeout(()=>switchSubTab('rotina'),100)">Abrir Rotina</button>
+        </td>
+      </tr>`;
+  }
+
+  tableHtml += `</tbody></table></div>`;
+
+  // Summary KPIs
+  const allCompliances = CLIENTES.map(cli => getComplianceForClient(cli.id));
+  const avgDaily = Math.round(allCompliances.reduce((s,c)=>s+c.dailyPct,0) / allCompliances.length) || 0;
+  const avgSemanal = Math.round(allCompliances.reduce((s,c)=>s+Math.round((c.semanDone/c.semanTotal)*100),0) / allCompliances.length) || 0;
+  const avgMensal = Math.round(allCompliances.reduce((s,c)=>s+Math.round((c.mensalDone/c.mensalTotal)*100),0) / allCompliances.length) || 0;
+
+  const summaryHtml = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+      <div class="card" style="text-align:center;">
+        <div class="card-label">MÉDIA DIÁRIA DO MÊS</div>
+        <div style="font-size:28px;font-weight:800;color:${pctColor(avgDaily)};margin:4px 0;">${avgDaily}%</div>
+        <div style="font-size:10px;color:var(--txt-muted);">dias com 100% das tarefas concluídas</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">MÉDIA SEMANAL</div>
+        <div style="font-size:28px;font-weight:800;color:${pctColor(avgSemanal)};margin:4px 0;">${avgSemanal}%</div>
+        <div style="font-size:10px;color:var(--txt-muted);">das tarefas semanais concluídas</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">MÉDIA MENSAL</div>
+        <div style="font-size:28px;font-weight:800;color:${pctColor(avgMensal)};margin:4px 0;">${avgMensal}%</div>
+        <div style="font-size:10px;color:var(--txt-muted);">das tarefas mensais concluídas</div>
       </div>
     </div>
   `;
 
-  for (const proc of procedures) {
-    html += `
-      <div class="card" style="margin-bottom:16px;">
-        <div style="font-weight:700; color:var(--accent); margin-bottom:12px; font-size:13px; letter-spacing:1px;">${proc.title}</div>
-        <ul style="margin-left:20px; color:var(--txt-secondary); font-size:12px; line-height:1.8;">
-    `;
-    for (const item of proc.items) {
-      html += `<li style="margin-bottom:6px;">✓ ${item}</li>`;
-    }
-    html += `</ul></div>`;
-  }
-
-  c.innerHTML = html;
+  document.getElementById('rotina-compliance-table').innerHTML = summaryHtml + tableHtml;
 }
 
 function renderSemanal() {
