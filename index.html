@@ -1068,13 +1068,40 @@ table input:focus, table select:focus {
   padding: 32px;
   text-align: center;
 }
+.meta-sub-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 0;
+}
+.meta-sub-nav::-webkit-scrollbar { display: none; }
+.meta-sub-tab {
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  transition: color .15s, border-color .15s;
+}
+.meta-sub-tab:hover { color: var(--txt-secondary); }
+.meta-sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .meta-metrics-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
-@media (max-width: 1100px) { .meta-metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+.meta-metrics-grid.cols6 { grid-template-columns: repeat(6, 1fr); }
+@media (max-width: 1200px) { .meta-metrics-grid { grid-template-columns: repeat(4, 1fr); } .meta-metrics-grid.cols6 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 800px) { .meta-metrics-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .meta-metrics-grid { grid-template-columns: repeat(2, 1fr); } }
 .metric-card {
   background: var(--surf-1);
@@ -1082,8 +1109,12 @@ table input:focus, table select:focus {
   border-radius: var(--radius);
   padding: 12px 14px;
   transition: border-color .15s;
+  position: relative;
 }
 .metric-card:hover { border-color: var(--border-mid); }
+.metric-card.alert { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.04); }
+.metric-card.warn { border-color: rgba(234,179,8,.35); background: rgba(234,179,8,.04); }
+.metric-card.good { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.04); }
 .metric-label {
   font-size: 9px;
   letter-spacing: 1.5px;
@@ -1103,9 +1134,142 @@ table input:focus, table select:focus {
   font-size: 11px;
   color: var(--green);
 }
-.metric-change.down {
-  color: var(--red);
+.metric-change.down { color: var(--red); }
+.metric-meta-row {
+  font-size: 10px;
+  color: var(--txt-muted);
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+/* FUNIL */
+.meta-funnel {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.funnel-stage {
+  flex: 1;
+  min-width: 100px;
+  background: var(--surf-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 12px 10px;
+  text-align: center;
+  position: relative;
+}
+.funnel-stage.bottleneck { border-color: var(--red); background: rgba(239,68,68,.05); }
+.funnel-stage-label { font-size: 9px; font-weight: 700; color: var(--txt-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.funnel-stage-value { font-size: 16px; font-weight: 800; font-family: var(--mono); color: var(--txt-primary); }
+.funnel-stage-pct { font-size: 10px; color: var(--txt-muted); margin-top: 4px; }
+.funnel-arrow {
+  font-size: 18px;
+  color: var(--border-mid);
+  padding: 0 4px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.funnel-arrow .fa-rate {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--txt-muted);
+  background: var(--surf-2);
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.funnel-arrow .fa-rate.low { color: var(--red); }
+.funnel-arrow .fa-rate.ok { color: var(--green); }
+/* PACING */
+.pacing-widget {
+  background: var(--surf-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pacing-status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+.pacing-status-dot.slow { background: var(--yellow); }
+.pacing-status-dot.fast { background: var(--red); }
+.pacing-track { flex: 1; min-width: 180px; }
+.pacing-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--txt-muted); margin-bottom: 5px; }
+.pacing-bar-bg { background: var(--border-light); height: 8px; border-radius: 4px; overflow: visible; position: relative; }
+.pacing-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .3s; }
+.pacing-bar-expected { position: absolute; top: -3px; height: 14px; width: 2px; background: var(--yellow); border-radius: 1px; }
+/* DIAGNOSIS */
+.diag-card {
+  background: var(--surf-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.diag-card.critical { border-left: 3px solid var(--red); }
+.diag-card.warning { border-left: 3px solid var(--yellow); }
+.diag-card.ok { border-left: 3px solid var(--green); }
+.diag-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  flex-shrink: 0;
+}
+.diag-badge.critical { background: rgba(239,68,68,.15); color: var(--red); }
+.diag-badge.warning { background: rgba(234,179,8,.15); color: var(--yellow); }
+.diag-badge.ok { background: rgba(34,197,94,.15); color: var(--green); }
+.diag-body { flex: 1; }
+.diag-title { font-weight: 700; font-size: 13px; color: var(--txt-primary); margin-bottom: 4px; }
+.diag-desc { font-size: 11px; color: var(--txt-muted); margin-bottom: 8px; line-height: 1.5; }
+.diag-actions { display: flex; flex-direction: column; gap: 4px; }
+.diag-action { font-size: 11px; color: var(--txt-secondary); display: flex; gap: 6px; }
+.diag-action::before { content: '→'; color: var(--accent); flex-shrink: 0; }
+/* TEMP BADGE */
+.temp-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+}
+.temp-badge.F { background: rgba(99,179,237,.15); color: #63B3ED; }
+.temp-badge.M { background: rgba(234,179,8,.15); color: var(--yellow); }
+.temp-badge.Q { background: rgba(239,68,68,.15); color: var(--red); }
+.temp-badge.mix { background: rgba(110,127,153,.15); color: var(--accent); }
+/* OBJ BADGE */
+.obj-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+}
+.obj-badge.MSG { background: rgba(52,211,153,.12); color: #34D399; }
+.obj-badge.LEAD { background: rgba(99,179,237,.12); color: #63B3ED; }
+.obj-badge.CONV { background: rgba(167,139,250,.12); color: #A78BFA; }
+.obj-badge.REACH { background: rgba(110,127,153,.12); color: var(--accent); }
+.obj-badge.TRAF { background: rgba(251,191,36,.12); color: #FBBF24; }
 
 /* PROGRESS */
 .progress-bar {
@@ -2865,118 +3029,398 @@ async function loadMetaDashboard(clientId) {
   META_STATE.loading = false;
 }
 
-function generateMockMetaData() {
+function generateMockMetaData(isCompare) {
   const days = [];
-  const start = new Date(META_STATE.dateStart);
-  const end = new Date(META_STATE.dateEnd);
+  const start = new Date(META_STATE.dateStart || new Date(Date.now() - 30*86400000).toISOString().split('T')[0]);
+  const end   = new Date(META_STATE.dateEnd   || new Date().toISOString().split('T')[0]);
+  const vari  = isCompare ? 0.85 : 1;
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const base = 90 + Math.random() * 50;
+    const impr = Math.floor((4500 + Math.random() * 2000) * vari);
+    const reach = Math.floor(impr * (0.62 + Math.random() * 0.12));
+    const clks  = Math.floor(impr * (0.018 + Math.random() * 0.014));
+    const msgs  = Math.floor(clks * (0.28 + Math.random() * 0.18));
+    const leads = Math.floor(clks * (0.08 + Math.random() * 0.06));
+    const freq  = parseFloat((impr / Math.max(reach, 1)).toFixed(2));
     days.push({
       date_start: d.toISOString().split('T')[0],
-      spend: (80 + Math.random() * 40).toFixed(2),
-      impressions: Math.floor(4000 + Math.random() * 2000),
-      reach: Math.floor(3000 + Math.random() * 1500),
-      clicks: Math.floor(80 + Math.random() * 60),
-      ctr: (1.8 + Math.random() * 1.2).toFixed(2),
-      cpm: (18 + Math.random() * 8).toFixed(2),
-      cpc: (0.6 + Math.random() * 0.4).toFixed(2),
-      frequency: (2.5 + Math.random() * 1.5).toFixed(2),
-      actions: [{ action_type: 'lead', value: Math.floor(5 + Math.random() * 10) }]
+      spend: (base * vari).toFixed(2),
+      impressions: impr, reach, clicks: clks, frequency: freq,
+      ctr: ((clks / impr) * 100).toFixed(2),
+      cpm: ((base * vari / impr) * 1000).toFixed(2),
+      cpc: ((base * vari / Math.max(clks,1))).toFixed(2),
+      hook_rate: (22 + Math.random() * 18).toFixed(1),
+      connect_rate: ((msgs / Math.max(clks,1)) * 100).toFixed(1),
+      actions: [
+        { action_type: 'onsite_conversion.messaging_conversation_started_7d', value: msgs },
+        { action_type: 'lead', value: leads },
+        { action_type: 'purchase', value: Math.floor(leads * 0.12) },
+        { action_type: 'omni_purchase', value: Math.floor(leads * 0.12) },
+        { action_type: 'video_view', value: Math.floor(impr * (0.18 + Math.random() * 0.1)) }
+      ],
+      action_values: [
+        { action_type: 'purchase', value: (Math.floor(leads * 0.12) * (280 + Math.random() * 120)).toFixed(2) }
+      ]
     });
   }
 
+  const camps = [
+    { id: 'c1', objective: 'MESSAGES', status: 'ACTIVE', daily_budget: '8000',
+      name: '[MENSAGENS] [M] [FEED] WhatsApp — Agendamentos',
+      temp: 'M', spend: '2243.80', impressions: 98400, reach: 61200, clicks: 2187,
+      ctr: '2.22', cpm: '22.80', cpc: '1.03', frequency: '1.61',
+      conversoes: 612, tipo_conv: 'MSG', cpa: '3.67', hook_rate: '—',
+      connect_rate: '27.9', adsets: [
+        { id: 'as1', name: '01 - [FEED] - Envolvimento IG 30D', temp: 'M', status: 'ACTIVE',
+          spend: '1380.20', impr: 58200, reach: 35800, clks: 1320, ctr: '2.27', cpm: '23.71', cpc: '1.05',
+          freq: '1.63', conv: 378, cpa: '3.65', pub_size: '85k' },
+        { id: 'as2', name: '02 - [STORIES] - Visitantes Site 14D', temp: 'M', status: 'ACTIVE',
+          spend: '863.60', impr: 40200, reach: 25400, clks: 867, ctr: '2.16', cpm: '21.48', cpc: '1.00',
+          freq: '1.58', conv: 234, cpa: '3.69', pub_size: '42k' }
+      ],
+      ads: [
+        { id: 'ad1', name: 'AD01 - Depoimento Maria Silva', status: 'ACTIVE', format: 'Vídeo',
+          spend: '1240.50', impr: 54300, clks: 1243, ctr: '2.29', cpc: '1.00', freq: '1.58',
+          hook_rate: '38.2', conv: 348, cpa: '3.56' },
+        { id: 'ad2', name: 'AD02 - Antes e Depois Resultado', status: 'ACTIVE', format: 'Imagem',
+          spend: '743.40', impr: 32800, clks: 701, ctr: '2.14', cpc: '1.06', freq: '1.68',
+          hook_rate: '—', conv: 198, cpa: '3.75' },
+        { id: 'ad3', name: 'AD03 - Benefícios do Serviço', status: 'PAUSED', format: 'Carrossel',
+          spend: '259.90', impr: 11300, clks: 243, ctr: '2.15', cpc: '1.07', freq: '1.62',
+          hook_rate: '—', conv: 66, cpa: '3.94' }
+      ]
+    },
+    { id: 'c2', objective: 'LEAD_GENERATION', status: 'ACTIVE', daily_budget: '6000',
+      name: '[LEADS] [F] [FEED] Formulário — Captação Novos',
+      temp: 'F', spend: '1687.20', impressions: 88400, reach: 72100, clicks: 1063,
+      ctr: '1.20', cpm: '19.09', cpc: '1.59', frequency: '1.23',
+      conversoes: 143, tipo_conv: 'LEAD', cpa: '11.80', hook_rate: '29.4',
+      connect_rate: '—', adsets: [
+        { id: 'as3', name: '01 - [FEED] - Interesse Saúde 25-45', temp: 'F', status: 'ACTIVE',
+          spend: '962.40', impr: 52100, reach: 43600, clks: 603, ctr: '1.16', cpm: '18.47', cpc: '1.60',
+          freq: '1.20', conv: 82, cpa: '11.74', pub_size: '420k' },
+        { id: 'as4', name: '02 - [FEED] - Lookalike 2% Clientes', temp: 'F', status: 'ACTIVE',
+          spend: '724.80', impr: 36300, reach: 28500, clks: 460, ctr: '1.27', cpm: '19.97', cpc: '1.58',
+          freq: '1.27', conv: 61, cpa: '11.88', pub_size: '180k' }
+      ],
+      ads: [
+        { id: 'ad4', name: 'AD01 - Promoção Avaliação Grátis', status: 'ACTIVE', format: 'Vídeo',
+          spend: '943.20', impr: 49200, clks: 602, ctr: '1.22', cpc: '1.57', freq: '1.21',
+          hook_rate: '41.0', conv: 81, cpa: '11.65' },
+        { id: 'ad5', name: 'AD02 - Benefícios do Tratamento', status: 'ACTIVE', format: 'Imagem',
+          spend: '744.00', impr: 39200, clks: 461, ctr: '1.18', cpc: '1.61', freq: '1.25',
+          hook_rate: '—', conv: 62, cpa: '12.00' }
+      ]
+    },
+    { id: 'c3', objective: 'LINK_CLICKS', status: 'ACTIVE', daily_budget: '4000',
+      name: '[TRÁFEGO] [Q] [FEED] Remarketing — Quentes',
+      temp: 'Q', spend: '892.50', impressions: 41200, reach: 12800, clicks: 1286,
+      ctr: '3.12', cpm: '21.66', cpc: '0.69', frequency: '3.22',
+      conversoes: 98, tipo_conv: 'CONV', cpa: '9.11', hook_rate: '—',
+      connect_rate: '7.6', adsets: [
+        { id: 'as5', name: '01 - [FEED+STORIES] - Visitantes Site 7D', temp: 'Q', status: 'ACTIVE',
+          spend: '512.80', impr: 23400, reach: 7200, clks: 741, ctr: '3.17', cpm: '21.91', cpc: '0.69',
+          freq: '3.25', conv: 57, cpa: '8.99', pub_size: '7.2k' },
+        { id: 'as6', name: '02 - [FEED] - Engajamento Últ. 7D', temp: 'Q', status: 'ACTIVE',
+          spend: '379.70', impr: 17800, reach: 5600, clks: 545, ctr: '3.06', cpm: '21.33', cpc: '0.70',
+          freq: '3.18', conv: 41, cpa: '9.26', pub_size: '5.6k' }
+      ],
+      ads: [
+        { id: 'ad6', name: 'AD01 - Oferta Especial Volta', status: 'ACTIVE', format: 'Imagem',
+          spend: '523.80', impr: 24100, clks: 762, ctr: '3.16', cpc: '0.69', freq: '3.20',
+          hook_rate: '—', conv: 59, cpa: '8.88' },
+        { id: 'ad7', name: 'AD02 - Lembre-se de Nós', status: 'ACTIVE', format: 'Vídeo',
+          spend: '368.70', impr: 17100, clks: 524, ctr: '3.06', cpc: '0.70', freq: '3.25',
+          hook_rate: '31.8', conv: 39, cpa: '9.45' }
+      ]
+    },
+    { id: 'c4', objective: 'REACH', status: 'PAUSED', daily_budget: '3000',
+      name: '[RECONHECIMENTO] [F] [FEED+STORIES] Branding Topo',
+      temp: 'F', spend: '320.40', impressions: 68200, reach: 58400, clicks: 342,
+      ctr: '0.50', cpm: '4.70', cpc: '0.94', frequency: '1.17',
+      conversoes: 0, tipo_conv: 'REACH', cpa: '0', hook_rate: '18.2',
+      connect_rate: '—', adsets: [
+        { id: 'as7', name: '01 - [FEED+STORIES] - Público Amplo 25-50', temp: 'F', status: 'PAUSED',
+          spend: '320.40', impr: 68200, reach: 58400, clks: 342, ctr: '0.50', cpm: '4.70', cpc: '0.94',
+          freq: '1.17', conv: 0, cpa: '—', pub_size: '1.2M' }
+      ],
+      ads: [
+        { id: 'ad8', name: 'AD01 - Institucional Marca', status: 'PAUSED', format: 'Vídeo',
+          spend: '320.40', impr: 68200, clks: 342, ctr: '0.50', cpc: '0.94', freq: '1.17',
+          hook_rate: '18.2', conv: 0, cpa: '—' }
+      ]
+    }
+  ];
+
+  const now = new Date();
+  const hourPct = Math.min((now.getHours() * 60 + now.getMinutes()) / 1440, 1);
+  const budgetTotal = camps.filter(c => c.status === 'ACTIVE').reduce((s,c) => s + parseInt(c.daily_budget), 0);
+  const spentToday = parseFloat((budgetTotal * hourPct * (0.85 + Math.random() * 0.25) / 100).toFixed(2));
+
   return {
     insights: days,
-    campaigns: [
-      { id: '1', name: 'Campanha Principal — Mensagens', objective: 'MESSAGES', status: 'ACTIVE', daily_budget: '5000' },
-      { id: '2', name: 'Retargeting — Visitantes', objective: 'CONVERSIONS', status: 'ACTIVE', daily_budget: '3000' },
-      { id: '3', name: 'Reconhecimento — Topo', objective: 'REACH', status: 'PAUSED', daily_budget: '2000' }
-    ],
-    campaign_insights: [
-      { campaign_id: '1', campaign_name: 'Campanha Principal — Mensagens', spend: '1824.50', clicks: '2341', ctr: '2.8', cpa: '9.12' },
-      { campaign_id: '2', campaign_name: 'Retargeting — Visitantes', spend: '742.30', clicks: '987', ctr: '3.1', cpa: '7.45' },
-      { campaign_id: '3', campaign_name: 'Reconhecimento — Topo', spend: '280.20', clicks: '519', ctr: '1.2', cpa: '0' }
-    ]
+    campaigns: camps.map(c => ({ id: c.id, name: c.name, objective: c.objective, status: c.status, daily_budget: c.daily_budget })),
+    campaign_insights: camps.map(c => ({
+      campaign_id: c.id, campaign_name: c.name, objective: c.objective,
+      status: c.status, temp: c.temp, spend: c.spend,
+      impressions: String(c.impressions), reach: String(c.reach),
+      clicks: String(c.clicks), ctr: c.ctr, cpm: c.cpm, cpc: c.cpc,
+      frequency: c.frequency, conversoes: String(c.conversoes),
+      tipo_conv: c.tipo_conv, cpa: c.cpa,
+      hook_rate: c.hook_rate, connect_rate: c.connect_rate,
+      adsets: c.adsets, ads: c.ads
+    })),
+    pacing: { budget_daily: budgetTotal, spent_today: spentToday, hour_pct: hourPct }
   };
 }
 
+// ===== META DASHBOARD v2 — COMPLETO =====
+let META_CURRENT_SUBTAB = 'geral';
+
 function renderMetaDashboard(clientId) {
   const data = META_STATE.data;
-  if (!data) {
-    showToast('Sem dados para exibir', 'error');
-    return;
-  }
+  if (!data) { showToast('Sem dados para exibir', 'error'); return; }
 
-  const client = CLIENTES.find(c => c.id === clientId) || {};
-  const insights = data.insights || [];
-  let totalSpend = 0, totalClicks = 0, totalImpressions = 0, totalReach = 0, totalFreq = 0;
-  let totalConversoes = 0;
+  const mc = document.getElementById('meta-content');
+  const tabsList = [
+    { id: 'geral',       label: '📊 Visão Geral' },
+    { id: 'campanhas',   label: '📋 Campanhas' },
+    { id: 'conjuntos',   label: '👥 Conjuntos' },
+    { id: 'criativos',   label: '🎨 Criativos' },
+    { id: 'diagnostico', label: '🔍 Diagnóstico' }
+  ];
 
-  for (const day of insights) {
-    totalSpend += parseFloat(day.spend || 0);
-    totalClicks += parseInt(day.clicks || 0);
-    totalImpressions += parseInt(day.impressions || 0);
-    totalReach += parseInt(day.reach || 0);
-    totalFreq += parseFloat(day.frequency || 0);
-    const acts = day.actions || [];
-    const leads = acts.find(a => a.action_type === 'lead' || a.action_type === 'omni_initiated_checkout');
-    if (leads) totalConversoes += parseInt(leads.value || 0);
-  }
-
-  const dias = insights.length || 1;
-  const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  const cpm = totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0;
-  const cpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
-  const cpa = totalConversoes > 0 ? totalSpend / totalConversoes : 0;
-  const freq = dias > 0 ? totalFreq / dias : 0;
-
-  // Benchmark check helper
-  const bm = (val, meta, lower_is_better = true) => {
-    if (!meta || meta == 0) return '';
-    const ratio = val / meta;
-    if (lower_is_better) {
-      if (ratio <= 1.0) return 'color:var(--green)';
-      if (ratio <= 1.2) return 'color:var(--yellow)';
-      return 'color:var(--red)';
-    } else {
-      if (ratio >= 1.0) return 'color:var(--green)';
-      if (ratio >= 0.8) return 'color:var(--yellow)';
-      return 'color:var(--red)';
-    }
-  };
-
-  const metricCard = (label, value, meta = null, lowerBetter = true, prefix = '', suffix = '') => {
-    const bmStyle = meta ? bm(parseFloat(value), meta, lowerBetter) : '';
-    const bmBadge = meta ? `<div style="font-size:10px;color:var(--txt-muted);margin-top:4px;">meta: ${prefix}${meta}${suffix}</div>` : '';
-    return `
-      <div class="metric-card">
-        <div class="metric-label">${label}</div>
-        <div class="metric-value" style="font-family:var(--mono);${bmStyle}">${prefix}${value}${suffix}</div>
-        ${bmBadge}
-      </div>`;
-  };
-
-  const html = `
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+  mc.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
       <div style="font-size:11px;color:var(--txt-muted);">Período: <strong style="color:var(--txt-secondary);">${META_STATE.dateStart} → ${META_STATE.dateEnd}</strong></div>
-      <div style="font-size:10px;color:var(--txt-muted);background:var(--bg-accent);padding:3px 8px;border-radius:4px;border:1px solid var(--border-light);">📊 ${dias} dias · Dados demonstrativos</div>
-      <button class="btn-small" onclick="openModal('mo-meta-account')" style="margin-left:auto;font-size:11px;">🔗 Conectar Conta Meta</button>
-      <button class="btn-small" onclick="openEmailModal()" style="font-size:11px;">📧 Enviar Relatório</button>
+      <div style="font-size:10px;color:var(--txt-muted);background:var(--bg-accent);padding:3px 8px;border-radius:4px;border:1px solid var(--border-light);">📊 ${data.insights?.length || 0} dias · Demo</div>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-small" onclick="openModal('mo-meta-account')" style="font-size:11px;">🔗 Conectar Meta</button>
+        <button class="btn-small" onclick="openEmailModal()" style="font-size:11px;">📧 Relatório</button>
+      </div>
+    </div>
+    <nav class="meta-sub-nav" id="meta-sub-nav">
+      ${tabsList.map(t => `<button class="meta-sub-tab ${t.id === META_CURRENT_SUBTAB ? 'active' : ''}" onclick="switchMetaTab('${t.id}')">${t.label}</button>`).join('')}
+    </nav>
+    <div id="meta-sub-content"></div>
+  `;
+
+  renderMetaSubTab(clientId);
+}
+
+function switchMetaTab(tab) {
+  META_CURRENT_SUBTAB = tab;
+  document.querySelectorAll('.meta-sub-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.includes(tab) || btn.getAttribute('onclick')?.includes(`'${tab}'`));
+  });
+  renderMetaSubTab(CURRENT_CLIENT?.id);
+}
+
+function renderMetaSubTab(clientId) {
+  const data = META_STATE.data;
+  const client = CLIENTES.find(c => c.id === clientId) || {};
+  const sub = document.getElementById('meta-sub-content');
+  if (!sub) return;
+
+  switch (META_CURRENT_SUBTAB) {
+    case 'geral':       sub.innerHTML = renderMetaGeral(data, client); break;
+    case 'campanhas':   sub.innerHTML = renderMetaCampanhas(data, client); break;
+    case 'conjuntos':   sub.innerHTML = renderMetaConjuntos(data, client); break;
+    case 'criativos':   sub.innerHTML = renderMetaCriativos(data, client); break;
+    case 'diagnostico': sub.innerHTML = renderMetaDiagnostico(data, client); break;
+  }
+
+  // Charts (apenas na aba geral)
+  if (META_CURRENT_SUBTAB === 'geral') {
+    setTimeout(() => initMetaCharts(data), 150);
+  }
+}
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+function metaAgg(data) {
+  const insights = data.insights || [];
+  let spend=0, impr=0, reach=0, clks=0, freq=0, msgs=0, leads=0, purchases=0, revenue=0, hookSum=0, hookN=0, connectSum=0;
+  for (const d of insights) {
+    spend += parseFloat(d.spend||0);
+    impr  += parseInt(d.impressions||0);
+    reach += parseInt(d.reach||0);
+    clks  += parseInt(d.clicks||0);
+    freq  += parseFloat(d.frequency||0);
+    if (d.hook_rate) { hookSum += parseFloat(d.hook_rate); hookN++; }
+    if (d.connect_rate) connectSum += parseFloat(d.connect_rate);
+    for (const a of (d.actions||[])) {
+      const v = parseInt(a.value||0);
+      if (a.action_type?.includes('messaging')) msgs += v;
+      if (a.action_type === 'lead') leads += v;
+      if (a.action_type === 'purchase' || a.action_type === 'omni_purchase') purchases += v;
+    }
+    for (const av of (d.action_values||[])) {
+      if (av.action_type === 'purchase') revenue += parseFloat(av.value||0);
+    }
+  }
+  const dias = Math.max(insights.length, 1);
+  const ctr  = impr > 0 ? (clks/impr)*100 : 0;
+  const cpm  = impr > 0 ? (spend/impr)*1000 : 0;
+  const cpc  = clks > 0 ? spend/clks : 0;
+  const avgFreq = freq/dias;
+  const totalConv = msgs || leads || purchases;
+  const cpa  = totalConv > 0 ? spend/totalConv : 0;
+  const roas = spend > 0 ? revenue/spend : 0;
+  const hookRate = hookN > 0 ? hookSum/hookN : 0;
+  const connectRate = dias > 0 ? connectSum/dias : 0;
+  return { spend, impr, reach, clks, ctr, cpm, cpc, freq: avgFreq, msgs, leads, purchases, revenue, cpa, roas, hookRate, connectRate, dias };
+}
+
+function metaBmClass(val, meta, lowerBetter) {
+  if (!meta || meta == 0) return '';
+  const r = val / meta;
+  if (lowerBetter) { return r <= 1 ? 'good' : r <= 1.25 ? 'warn' : 'alert'; }
+  else             { return r >= 1 ? 'good' : r >= 0.75 ? 'warn' : 'alert'; }
+}
+
+function metaKPICard(label, value, delta, cls, metaLine) {
+  const deltaHtml = delta !== null
+    ? `<span class="metric-change ${delta < 0 ? 'down' : ''}">${delta >= 0 ? '↑' : '↓'}${Math.abs(delta).toFixed(1)}%</span>`
+    : '';
+  return `
+    <div class="metric-card ${cls}">
+      <div class="metric-label">${label}</div>
+      <div class="metric-value">${value}</div>
+      <div class="metric-meta-row">${deltaHtml}<span>${metaLine || ''}</span></div>
+    </div>`;
+}
+
+function objBadge(obj) {
+  const map = { MESSAGES:'MSG', LEAD_GENERATION:'LEAD', LINK_CLICKS:'TRAF', CONVERSIONS:'CONV', REACH:'REACH' };
+  const k = map[obj] || 'TRAF';
+  return `<span class="obj-badge ${k}">${k}</span>`;
+}
+
+function tempBadge(t) {
+  return `<span class="temp-badge ${t}">${t}</span>`;
+}
+
+function statusDot(s) {
+  return s === 'ACTIVE'
+    ? `<span style="color:var(--green);font-size:10px;font-weight:700;">● ATIVO</span>`
+    : `<span style="color:var(--txt-muted);font-size:10px;">○ PAUSADO</span>`;
+}
+
+// ─── ABA GERAL ────────────────────────────────────────────────────────────────
+function renderMetaGeral(data, client) {
+  const m = metaAgg(data);
+
+  // metas do cliente
+  const bmCPM  = metaBmClass(m.cpm,  parseFloat(client.cpm_meta||0),  true);
+  const bmCTR  = metaBmClass(m.ctr,  parseFloat(client.ctr_meta||0),  false);
+  const bmCPC  = metaBmClass(m.cpc,  parseFloat(client.cpc_meta||0),  true);
+  const bmCPA  = metaBmClass(m.cpa,  parseFloat(client.cpa_meta||0),  true);
+  const bmFREQ = m.freq > 3.5 ? 'alert' : m.freq > 2.5 ? 'warn' : 'good';
+  const bmHOOK = m.hookRate > 30 ? 'good' : m.hookRate > 20 ? 'warn' : (m.hookRate > 0 ? 'alert' : '');
+  const bmCONN = m.connectRate > 25 ? 'good' : m.connectRate > 15 ? 'warn' : (m.connectRate > 0 ? 'alert' : '');
+
+  const metaFmt = (v, prefix='R$ ') => v > 0 ? `${prefix}${parseFloat(v).toFixed(2)}` : '—';
+
+  // Pacing
+  const pac = data.pacing || {};
+  const pacPct = pac.budget_daily > 0 ? (pac.spent_today / (pac.budget_daily / 100)) * 100 : 0;
+  const expPct = (pac.hour_pct || 0) * 100;
+  const pacStatus = Math.abs(pacPct - expPct) < 10 ? 'normal' : pacPct > expPct + 15 ? 'fast' : 'slow';
+  const pacLabel = pacStatus === 'fast' ? '⚡ Pacing acelerado — considere reduzir orçamento'
+                 : pacStatus === 'slow' ? '🐢 Pacing lento — entrega abaixo do esperado'
+                 : '✅ Pacing normal';
+
+  // Funil
+  const totalConv = m.msgs || m.leads || m.purchases;
+  const funelConvRate = m.clks > 0 ? (totalConv/m.clks)*100 : 0;
+  const funelCR_label = m.msgs > 0 ? 'MSGS' : m.leads > 0 ? 'LEADS' : 'COMPRAS';
+  const connRateNum = parseFloat((m.connectRate || 0).toFixed(1));
+  const bottleneck = m.ctr < 1 ? 'ctr' : connRateNum < 15 ? 'connect' : funelConvRate < 5 ? 'conv' : '';
+
+  return `
+    <!-- KPI GRID -->
+    <div class="meta-metrics-grid cols6">
+      ${metaKPICard('INVESTIMENTO', fmtR(m.spend), null, '', '')}
+      ${metaKPICard('IMPRESSÕES', fmtN(m.impr), null, '', '')}
+      ${metaKPICard('ALCANCE', fmtN(m.reach), null, '', '')}
+      ${metaKPICard('FREQUÊNCIA', m.freq.toFixed(2)+'x', null, bmFREQ, m.freq>3.5?'⚠ Saturação' : m.freq>2.5?'Atenção':'OK')}
+      ${metaKPICard('CPM', fmtR(m.cpm), null, bmCPM, client.cpm_meta ? 'meta: R$ '+client.cpm_meta : '')}
+      ${metaKPICard('CLIQUES', fmtN(m.clks), null, '', '')}
+      ${metaKPICard('CTR', m.ctr.toFixed(2)+'%', null, bmCTR, client.ctr_meta ? 'meta: '+client.ctr_meta+'%' : m.ctr<1?'⚠ <1% crítico':'')}
+      ${metaKPICard('CPC', fmtR(m.cpc), null, bmCPC, client.cpc_meta ? 'meta: R$ '+client.cpc_meta : '')}
+      ${metaKPICard('HOOK RATE', m.hookRate>0?m.hookRate.toFixed(1)+'%':'—', null, bmHOOK, m.hookRate>0?(m.hookRate<20?'⚠ <20% fraco':''):'')}
+      ${metaKPICard('CONNECT RATE', connRateNum>0?connRateNum+'%':'—', null, bmCONN, connRateNum>0?(connRateNum<15?'⚠ Problema no destino':''):'MSG/Tráfego')}
+      ${metaKPICard(funelConvRate>0?funelCR_label:'CONVERSÕES', totalConv>0?fmtN(totalConv):'—', null, '', '')}
+      ${metaKPICard('CPA', m.cpa>0?fmtR(m.cpa):'—', null, bmCPA, client.cpa_meta?'meta: R$ '+client.cpa_meta:'')}
+    </div>
+    ${m.roas > 0 ? `
+    <div class="meta-metrics-grid" style="grid-template-columns:repeat(3,1fr);">
+      ${metaKPICard('ROAS', m.roas.toFixed(2)+'x', null, m.roas>=2?'good':m.roas>=1?'warn':'alert', m.roas<1?'⚠ Gasto > Receita':'')}
+      ${metaKPICard('RECEITA', fmtR(m.revenue), null, '', '')}
+      ${metaKPICard('COMPRAS', fmtN(m.purchases), null, '', '')}
+    </div>` : ''}
+
+    <!-- PACING -->
+    <div class="pacing-widget">
+      <div class="pacing-status-dot ${pacStatus === 'fast' ? 'fast' : pacStatus === 'slow' ? 'slow' : ''}"></div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--txt-primary);">${pacLabel}</div>
+        <div style="font-size:10px;color:var(--txt-muted);margin-top:2px;">Orçamento hoje: ${fmtR(pac.budget_daily/100)} · Gasto até agora: ${fmtR(pac.spent_today||0)}</div>
+      </div>
+      <div class="pacing-track" style="margin-left:auto;min-width:220px;">
+        <div class="pacing-labels"><span>0%</span><span>${expPct.toFixed(0)}% esperado</span><span>100%</span></div>
+        <div class="pacing-bar-bg">
+          <div class="pacing-bar-fill" style="width:${Math.min(pacPct,100).toFixed(1)}%;background:${pacStatus==='fast'?'var(--red)':pacStatus==='slow'?'var(--yellow)':'var(--accent)'}"></div>
+          <div class="pacing-bar-expected" style="left:${expPct.toFixed(1)}%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--txt-muted);margin-top:4px;text-align:right;">${pacPct.toFixed(1)}% do orçamento gasto</div>
+      </div>
     </div>
 
-    <div class="meta-metrics-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;">
-      ${metricCard('INVESTIMENTO', fmtR(totalSpend))}
-      ${metricCard('IMPRESSÕES', fmtN(totalImpressions))}
-      ${metricCard('ALCANCE', fmtN(totalReach))}
-      ${metricCard('CLIQUES', fmtN(totalClicks))}
-      ${metricCard('CTR', ctr.toFixed(2) + '%', client.ctr_meta, false)}
-      ${metricCard('CPM', fmtR(cpm), client.cpm_meta, true)}
-      ${metricCard('CPC', fmtR(cpc), client.cpc_meta, true)}
-      ${metricCard('CONVERSÕES', fmtN(totalConversoes))}
-      ${metricCard('CPA', cpa > 0 ? fmtR(cpa) : '—', client.cpa_meta, true)}
-      ${metricCard('FREQUÊNCIA', freq.toFixed(1) + 'x')}
+    <!-- FUNIL -->
+    <div class="section">
+      <div class="section-title">🔽 FUNIL DE CONVERSÃO</div>
+      <div class="meta-funnel" style="margin-top:12px;">
+        <div class="funnel-stage">
+          <div class="funnel-stage-label">Impressões</div>
+          <div class="funnel-stage-value">${fmtN(m.impr)}</div>
+          <div class="funnel-stage-pct">100%</div>
+        </div>
+        <div class="funnel-arrow">
+          <span>→</span>
+          <span class="fa-rate ${m.ctr<1?'low':'ok'}" title="CTR">CTR ${m.ctr.toFixed(2)}%</span>
+        </div>
+        <div class="funnel-stage ${bottleneck==='ctr'?'bottleneck':''}">
+          <div class="funnel-stage-label">Cliques${bottleneck==='ctr'?' ⚠':''}</div>
+          <div class="funnel-stage-value">${fmtN(m.clks)}</div>
+          <div class="funnel-stage-pct">${m.impr>0?((m.clks/m.impr)*100).toFixed(2):'0'}%</div>
+        </div>
+        ${connRateNum > 0 ? `
+        <div class="funnel-arrow">
+          <span>→</span>
+          <span class="fa-rate ${connRateNum<15?'low':'ok'}" title="Connect Rate">Connect ${connRateNum}%</span>
+        </div>
+        <div class="funnel-stage ${bottleneck==='connect'?'bottleneck':''}">
+          <div class="funnel-stage-label">Contatos${bottleneck==='connect'?' ⚠':''}</div>
+          <div class="funnel-stage-value">${fmtN(Math.round(m.clks*(connRateNum/100)))}</div>
+          <div class="funnel-stage-pct">${connRateNum.toFixed(1)}% dos cliques</div>
+        </div>` : ''}
+        ${totalConv > 0 ? `
+        <div class="funnel-arrow">
+          <span>→</span>
+          <span class="fa-rate ${funelConvRate<5?'low':'ok'}">${funelConvRate.toFixed(1)}%</span>
+        </div>
+        <div class="funnel-stage ${bottleneck==='conv'?'bottleneck':''}">
+          <div class="funnel-stage-label">${funelCR_label}${bottleneck==='conv'?' ⚠':''}</div>
+          <div class="funnel-stage-value">${fmtN(totalConv)}</div>
+          <div class="funnel-stage-pct">CPA: ${fmtR(m.cpa)}</div>
+        </div>` : ''}
+      </div>
+      ${bottleneck ? `<div style="margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius);font-size:11px;color:var(--red);">⚠ Gargalo identificado no estágio <strong>${bottleneck==='ctr'?'CTR':bottleneck==='connect'?'Connect Rate':'Conversão'}</strong> — este é o ponto prioritário de otimização.</div>` : ''}
     </div>
 
+    <!-- CHART TEMPORAL -->
     <div class="section">
       <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
         📈 EVOLUÇÃO TEMPORAL
@@ -2984,131 +3428,432 @@ function renderMetaDashboard(clientId) {
           <option value="spend">Investimento</option>
           <option value="impressions">Impressões</option>
           <option value="clicks">Cliques</option>
-          <option value="ctr">CTR</option>
+          <option value="ctr">CTR (%)</option>
+          <option value="cpm">CPM</option>
+          <option value="cpc">CPC</option>
+          <option value="frequency">Frequência</option>
         </select>
       </div>
-      <div class="chart-container" style="height:220px;margin-top:12px;">
-        <canvas id="meta-chart-spend"></canvas>
-      </div>
+      <div style="height:200px;margin-top:12px;"><canvas id="meta-chart-spend"></canvas></div>
     </div>
 
+    <!-- DISTRIBUIÇÃO CAMPANHAS -->
     <div class="section">
-      <div class="section-title">🏆 TOP CAMPANHAS POR INVESTIMENTO</div>
-      <div class="chart-container" style="height:160px;margin-top:12px;">
-        <canvas id="meta-chart-campaigns"></canvas>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">📊 CAMPANHAS ATIVAS</div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>CAMPANHA</th>
-              <th>STATUS</th>
-              <th>GASTO</th>
-              <th>CLIQUES</th>
-              <th>CTR</th>
-              <th>CPA</th>
-            </tr>
-          </thead>
-          <tbody id="meta-campaigns-body">
-          </tbody>
-        </table>
-      </div>
+      <div class="section-title">🏆 DISTRIBUIÇÃO DE INVESTIMENTO POR CAMPANHA</div>
+      <div style="height:140px;margin-top:12px;"><canvas id="meta-chart-campaigns"></canvas></div>
     </div>
   `;
+}
 
-  document.getElementById('meta-content').innerHTML = html;
+// ─── ABA CAMPANHAS ───────────────────────────────────────────────────────────
+function renderMetaCampanhas(data, client) {
+  const camps = data.campaign_insights || [];
+  const rows = camps.map(c => {
+    const st = c.status === 'ACTIVE';
+    const cpaNum = parseFloat(c.cpa||0);
+    const cpaMeta = parseFloat(client.cpa_meta||0);
+    const cpaClass = cpaMeta > 0 ? (cpaNum <= cpaMeta ? 'color:var(--green)' : cpaNum <= cpaMeta*1.3 ? 'color:var(--yellow)' : 'color:var(--red)') : '';
+    const convLabel = c.tipo_conv === 'MSG' ? 'Mensagens' : c.tipo_conv === 'LEAD' ? 'Leads' : c.tipo_conv === 'CONV' ? 'Compras' : '—';
+    return `
+      <tr style="${!st?'opacity:.55':''}">
+        <td style="max-width:240px;"><div style="font-size:11px;font-weight:600;color:var(--txt-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${c.campaign_name}">${c.campaign_name}</div></td>
+        <td>${statusDot(c.status)}</td>
+        <td>${objBadge(c.objective)}</td>
+        <td>${tempBadge(c.temp||'F')}</td>
+        <td style="font-family:var(--mono);">${fmtR(c.spend)}</td>
+        <td style="font-family:var(--mono);">${fmtN(c.impressions)}</td>
+        <td style="font-family:var(--mono);">${c.cpm}</td>
+        <td style="font-family:var(--mono);${parseFloat(c.ctr)<1?'color:var(--red)':''}">${c.ctr}%</td>
+        <td style="font-family:var(--mono);">${c.cpc}</td>
+        <td style="font-family:var(--mono);">${c.frequency}x${parseFloat(c.frequency)>3?'<span style="color:var(--red);margin-left:4px;font-size:9px;">⚠</span>':''}</td>
+        <td style="font-family:var(--mono);">${c.hook_rate !== '—' ? c.hook_rate+'%' : '—'}</td>
+        <td style="font-family:var(--mono);">${c.connect_rate !== '—' ? c.connect_rate+'%' : '—'}</td>
+        <td style="font-family:var(--mono);">${convLabel} ${fmtN(c.conversoes)}</td>
+        <td style="font-family:var(--mono);${cpaClass}">${cpaNum > 0 ? fmtR(cpaNum) : '—'}</td>
+      </tr>`;
+  }).join('');
 
-  // Renderizar campanhas
-  let campaignHtml = '';
-  for (const campaign of (data.campaign_insights || [])) {
-    const statusColor = campaign.status === 'ACTIVE' ? 'var(--green)' : 'var(--txt-muted)';
-    campaignHtml += `
-      <tr>
-        <td>${campaign.campaign_name}</td>
-        <td><span style="color:${statusColor};font-size:10px;font-weight:700;">${campaign.status === 'ACTIVE' ? '● ATIVO' : '○ PAUSADO'}</span></td>
-        <td>${fmtR(campaign.spend)}</td>
-        <td>${fmtN(campaign.clicks)}</td>
-        <td>${campaign.ctr}%</td>
-        <td>${campaign.cpa !== '0' ? fmtR(campaign.cpa) : '—'}</td>
-      </tr>
-    `;
+  return `
+    <div class="section" style="margin-top:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="section-title" style="margin:0;">📋 CAMPANHAS — ANÁLISE COMPLETA</div>
+        <div style="display:flex;gap:6px;">
+          ${[['MSG','MSG'],['LEAD','LEAD'],['CONV','CONV'],['REACH','REACH']].map(([k,l]) =>
+            `<span class="obj-badge ${k}" style="cursor:pointer;">${l}</span>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th style="min-width:200px;">CAMPANHA</th>
+            <th>STATUS</th><th>OBJETIVO</th><th>PÚBLICO</th>
+            <th>GASTO</th><th>IMPRESSÕES</th><th>CPM</th><th>CTR</th>
+            <th>CPC</th><th>FREQ.</th><th>HOOK%</th><th>CONNECT%</th>
+            <th>CONVERSÕES</th><th>CPA</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="font-size:10px;color:var(--txt-muted);">
+          <strong style="color:var(--txt-secondary);">Hook Rate:</strong> % do público que assistiu os 1s do vídeo. >30% = bom · <20% = gancho fraco.
+        </div>
+        <div style="font-size:10px;color:var(--txt-muted);">
+          <strong style="color:var(--txt-secondary);">Connect Rate:</strong> % de cliques que viraram contato (WhatsApp/DM). <15% = problema no destino.
+        </div>
+        <div style="font-size:10px;color:var(--txt-muted);">
+          <strong style="color:var(--txt-secondary);">Frequência:</strong> >3,5x = saturação crítica → novos criativos urgente.
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── ABA CONJUNTOS ───────────────────────────────────────────────────────────
+function renderMetaConjuntos(data, client) {
+  const camps = data.campaign_insights || [];
+  let rows = '';
+  for (const c of camps) {
+    for (const as of (c.adsets || [])) {
+      const freqWarn = parseFloat(as.freq||0) > 3.5;
+      const cpaNum = parseFloat(as.cpa||0);
+      const cpaMeta = parseFloat(client.cpa_meta||0);
+      const cpaStyle = cpaMeta > 0 && cpaNum > 0 ? (cpaNum <= cpaMeta ? 'color:var(--green)' : cpaNum <= cpaMeta*1.3 ? 'color:var(--yellow)' : 'color:var(--red)') : '';
+      rows += `
+        <tr style="${as.status!=='ACTIVE'?'opacity:.55':''}">
+          <td style="font-size:10px;color:var(--txt-muted);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${c.campaign_name}">${c.campaign_name.substring(0,30)}…</td>
+          <td><div style="font-size:11px;font-weight:600;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${as.name}">${as.name}</div></td>
+          <td>${statusDot(as.status)}</td>
+          <td>${tempBadge(as.temp||'F')}</td>
+          <td style="font-size:10px;color:var(--txt-muted);">${as.pub_size||'—'}</td>
+          <td style="font-family:var(--mono);">${fmtR(as.spend)}</td>
+          <td style="font-family:var(--mono);">${fmtN(as.impr)}</td>
+          <td style="font-family:var(--mono);">${as.cpm}</td>
+          <td style="font-family:var(--mono);${parseFloat(as.ctr)<1?'color:var(--red)':''}">${as.ctr}%</td>
+          <td style="font-family:var(--mono);">${as.cpc}</td>
+          <td style="font-family:var(--mono);${freqWarn?'color:var(--red)':''}">${as.freq}x${freqWarn?' ⚠':''}</td>
+          <td style="font-family:var(--mono);">${fmtN(as.conv)}</td>
+          <td style="font-family:var(--mono);${cpaStyle}">${cpaNum > 0 ? fmtR(cpaNum) : as.cpa === '—' ? '—' : '—'}</td>
+        </tr>`;
+    }
   }
-  document.getElementById('meta-campaigns-body').innerHTML = campaignHtml;
 
-  // Charts
-  setTimeout(() => {
-    // Gráfico linha — gasto temporal
-    const ctx = document.getElementById('meta-chart-spend');
-    if (ctx && window.Chart) {
-      if (ctx._chartInstance) ctx._chartInstance.destroy();
-      ctx._chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: insights.map(d => {
-            const dt = new Date(d.date_start + 'T12:00:00');
-            return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-          }),
-          datasets: [{
-            label: 'Investimento (R$)',
-            data: insights.map(d => parseFloat(d.spend || 0)),
-            borderColor: '#6E7F99',
-            backgroundColor: 'rgba(110,127,153,0.08)',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: true,
-            pointRadius: 2,
-            pointHoverRadius: 5
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { ticks: { color: '#7D8794', font: { family: 'DM Mono', size: 10 } }, grid: { color: '#263140' }, border: { display: false } },
-            x: { ticks: { color: '#7D8794', font: { size: 10 }, maxTicksLimit: 10 }, grid: { display: false }, border: { display: false } }
-          }
-        }
-      });
-    }
+  return `
+    <div class="section" style="margin-top:0;">
+      <div class="section-title" style="margin-bottom:12px;">👥 CONJUNTOS DE ANÚNCIOS — SEGMENTAÇÃO [F/M/Q]</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+        <div style="font-size:11px;padding:8px 12px;background:rgba(99,179,237,.08);border:1px solid rgba(99,179,237,.2);border-radius:var(--radius);">
+          <strong style="color:#63B3ED;">[F] Frio</strong> <span style="color:var(--txt-muted);font-size:10px;"> — Interesse/Lookalike. CPM tende a ser menor. Frequência raramente satura.</span>
+        </div>
+        <div style="font-size:11px;padding:8px 12px;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:var(--radius);">
+          <strong style="color:var(--yellow);">[M] Morno</strong> <span style="color:var(--txt-muted);font-size:10px;"> — Engajamento IG/FB, visitantes. CTR maior, CPC geralmente ok.</span>
+        </div>
+        <div style="font-size:11px;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius);">
+          <strong style="color:var(--red);">[Q] Quente</strong> <span style="color:var(--txt-muted);font-size:10px;"> — Clientes/leads, carrinho. Frequência satura rápido. CPA mais baixo.</span>
+        </div>
+      </div>
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>CAMPANHA</th><th style="min-width:180px;">CONJUNTO</th><th>STATUS</th>
+            <th>TEMP</th><th>TAMANHO</th><th>GASTO</th><th>IMPRESSÕES</th>
+            <th>CPM</th><th>CTR</th><th>CPC</th><th>FREQ.</th><th>CONV.</th><th>CPA</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
 
-    // Gráfico barras — campanhas
-    const ctxC = document.getElementById('meta-chart-campaigns');
-    if (ctxC && window.Chart && data.campaign_insights && data.campaign_insights.length > 0) {
-      if (ctxC._chartInstance) ctxC._chartInstance.destroy();
-      const camps = [...data.campaign_insights].sort((a,b) => parseFloat(b.spend) - parseFloat(a.spend)).slice(0, 5);
-      ctxC._chartInstance = new Chart(ctxC, {
-        type: 'bar',
-        data: {
-          labels: camps.map(c => c.campaign_name.length > 28 ? c.campaign_name.substring(0,28)+'…' : c.campaign_name),
-          datasets: [{
-            data: camps.map(c => parseFloat(c.spend || 0)),
-            backgroundColor: camps.map((_, i) => `rgba(110,127,153,${0.9 - i*0.12})`),
-            borderColor: '#6E7F99',
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: '#7D8794', font: { family: 'DM Mono', size: 10 } }, grid: { color: '#263140' }, border: { display: false } },
-            y: { ticks: { color: '#B4BDC9', font: { size: 11 } }, grid: { display: false }, border: { display: false } }
-          }
-        }
-      });
+// ─── ABA CRIATIVOS ───────────────────────────────────────────────────────────
+function renderMetaCriativos(data, client) {
+  const camps = data.campaign_insights || [];
+  let rows = '';
+  for (const c of camps) {
+    for (const ad of (c.ads || [])) {
+      const hookNum = parseFloat(ad.hook_rate||0);
+      const hookClass = hookNum > 30 ? 'color:var(--green)' : hookNum > 20 ? 'color:var(--yellow)' : hookNum > 0 ? 'color:var(--red)' : '';
+      const freqWarn = parseFloat(ad.freq||0) > 3.5;
+      const cpaNum = parseFloat(ad.cpa||0);
+      const cpaMeta = parseFloat(client.cpa_meta||0);
+      const cpaStyle = cpaMeta > 0 && cpaNum > 0 ? (cpaNum <= cpaMeta ? 'color:var(--green)' : cpaNum <= cpaMeta*1.3 ? 'color:var(--yellow)' : 'color:var(--red)') : '';
+      rows += `
+        <tr style="${ad.status!=='ACTIVE'?'opacity:.55':''}">
+          <td style="font-size:10px;color:var(--txt-muted);">${c.campaign_name.substring(0,25)}…</td>
+          <td><div style="font-size:11px;font-weight:600;">${ad.name}</div></td>
+          <td>${statusDot(ad.status)}</td>
+          <td><span style="font-size:10px;background:var(--surf-2);padding:2px 6px;border-radius:4px;">${ad.format||'—'}</span></td>
+          <td style="font-family:var(--mono);">${fmtR(ad.spend)}</td>
+          <td style="font-family:var(--mono);">${fmtN(ad.impr)}</td>
+          <td style="font-family:var(--mono);${hookClass}">${hookNum > 0 ? hookNum.toFixed(1)+'%' : '—'}</td>
+          <td style="font-family:var(--mono);${parseFloat(ad.ctr)<1?'color:var(--red)':''}">${ad.ctr}%</td>
+          <td style="font-family:var(--mono);">${ad.cpc}</td>
+          <td style="font-family:var(--mono);${freqWarn?'color:var(--red)':''}">${ad.freq}x${freqWarn?' ⚠':''}</td>
+          <td style="font-family:var(--mono);">${fmtN(ad.conv)}</td>
+          <td style="font-family:var(--mono);${cpaStyle}">${cpaNum > 0 ? fmtR(cpaNum) : ad.cpa === '—' ? '—' : '—'}</td>
+        </tr>`;
     }
-  }, 150);
+  }
+
+  return `
+    <div class="section" style="margin-top:0;">
+      <div class="section-title" style="margin-bottom:4px;">🎨 CRIATIVOS — ANÁLISE DE PERFORMANCE</div>
+      <div style="font-size:11px;color:var(--txt-muted);margin-bottom:12px;">Regra de ouro: 6 anúncios rodando + 6 prontos para ativar. Se não testou 10 variações do vencedor, está deixando dinheiro na mesa.</div>
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>CAMPANHA</th><th style="min-width:180px;">CRIATIVO</th><th>STATUS</th>
+            <th>FORMATO</th><th>GASTO</th><th>IMPRESSÕES</th>
+            <th>HOOK RATE</th><th>CTR</th><th>CPC</th><th>FREQ.</th>
+            <th>CONV.</th><th>CPA</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div class="card" style="border-color:rgba(34,197,94,.3);">
+          <div style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:4px;">HOOK RATE — REFERÊNCIAS</div>
+          <div style="font-size:11px;color:var(--txt-secondary);">
+            <div style="color:var(--green);">✓ >30% — Gancho forte</div>
+            <div style="color:var(--yellow);">~ 20–30% — Médio, melhorar</div>
+            <div style="color:var(--red);">✗ <20% — Reescreva os 3s</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(234,179,8,.3);">
+          <div style="font-size:9px;font-weight:700;color:var(--yellow);letter-spacing:1px;margin-bottom:4px;">QUANDO PAUSAR UM ANÚNCIO</div>
+          <div style="font-size:11px;color:var(--txt-secondary);">
+            CTR < 0,5% por 3+ dias<br>
+            CPM > 2× benchmark<br>
+            Frequência > 3,5x<br>
+            CPA > 130% da meta
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(110,127,153,.3);">
+          <div style="font-size:9px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:4px;">COMO VARIAR O VENCEDOR</div>
+          <div style="font-size:11px;color:var(--txt-secondary);">
+            Trocar gancho (3s iniciais)<br>
+            Mudar formato (img/vídeo/carrossel)<br>
+            Alterar CTA e copy<br>
+            Regravar com final diferente
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── ABA DIAGNÓSTICO ─────────────────────────────────────────────────────────
+function renderMetaDiagnostico(data, client) {
+  const m = metaAgg(data);
+  const camps = data.campaign_insights || [];
+  const cpaMeta = parseFloat(client.cpa_meta||0);
+  const cpmMeta = parseFloat(client.cpm_meta||0);
+  const ctrMeta = parseFloat(client.ctr_meta||0);
+
+  const issues = [];
+
+  // CPA acima da meta
+  if (cpaMeta > 0 && m.cpa > cpaMeta * 1.2) {
+    issues.push({ sev: 'critical', icon: '🎯', title: `CPA R$ ${m.cpa.toFixed(2)} — ${((m.cpa/cpaMeta-1)*100).toFixed(0)}% acima da meta`,
+      desc: 'O custo por resultado está significativamente acima do acordado com o cliente. Prioridade máxima.',
+      actions: ['Mapeie o funil: CPM → CTR → Connect Rate → Conversão — identifique onde está perdendo',
+                'Verifique o destino dos anúncios (link, WhatsApp, landing page)',
+                'Pause conjuntos com CPA > 1,5× a meta e redirecione verba para os melhores',
+                'Teste novos criativos com gancho diferente e CTA mais direto',
+                'Analise se a segmentação está alinhada com o público que realmente converte']});
+  }
+
+  // CTR abaixo
+  if (m.ctr < (ctrMeta > 0 ? ctrMeta * 0.7 : 1.0)) {
+    issues.push({ sev: 'critical', icon: '📉', title: `CTR ${m.ctr.toFixed(2)}% — abaixo do esperado`,
+      desc: 'O anúncio aparece mas não gera cliques. O problema está no criativo ou na segmentação.',
+      actions: ['Reescreva o gancho: os primeiros 3s do vídeo ou a primeira linha do texto',
+                'Teste diferentes formatos: vídeo, imagem, carrossel',
+                'Revise a segmentação — público errado = CTR sempre baixo',
+                'Crie pelo menos 3 variações de copy com dores/benefícios distintos']});
+  }
+
+  // CPM alto
+  if (cpmMeta > 0 && m.cpm > cpmMeta * 1.3) {
+    issues.push({ sev: 'warning', icon: '💰', title: `CPM R$ ${m.cpm.toFixed(2)} — alto (meta R$ ${cpmMeta})`,
+      desc: 'Você está perdendo leilões ou o algoritmo vê baixa relevância no anúncio.',
+      actions: ['Melhore a qualidade e relevância do criativo',
+                'Refine segmentação: combine interesses, faixa etária e região menos concorridas',
+                'Expanda o público se ele estiver muito pequeno (<50k pessoas)',
+                'Faça rotação de criativos — saturação sobe CPM']});
+  }
+
+  // Frequência alta
+  const maxFreq = Math.max(...camps.map(c => parseFloat(c.frequency||0)));
+  if (maxFreq > 3.5) {
+    issues.push({ sev: 'critical', icon: '🔁', title: `Frequência ${maxFreq.toFixed(1)}x — saturação crítica em campanha`,
+      desc: 'As mesmas pessoas estão vendo os mesmos anúncios repetidamente. Rendimento cai e CPM sobe.',
+      actions: ['Suba novos criativos imediatamente — pelo menos 3 variações',
+                'Amplie o público (segmentação mais aberta ou novo lookalike)',
+                'Considere pausar e reativar a campanha após 7 dias',
+                'Exclua quem já converteu do público ativo']});
+  }
+
+  // Connect Rate baixo
+  if (m.connectRate > 0 && m.connectRate < 15) {
+    issues.push({ sev: 'critical', icon: '🔗', title: `Connect Rate ${m.connectRate.toFixed(1)}% — problema no destino`,
+      desc: 'Pessoas clicam mas não chegam a entrar em contato. O problema está fora do gerenciador.',
+      actions: ['Verifique se o link de WhatsApp está funcionando corretamente',
+                'Revise a mensagem pré-preenchida do WhatsApp — deve ser clara e natural',
+                'Alinhe a promessa do anúncio com o que o usuário encontra ao chegar',
+                'Reduza fricção: botão de contato visível logo no início']});
+  }
+
+  // Hook Rate baixo
+  if (m.hookRate > 0 && m.hookRate < 20) {
+    issues.push({ sev: 'warning', icon: '🎬', title: `Hook Rate ${m.hookRate.toFixed(1)}% — gancho fraco nos vídeos`,
+      desc: 'A maioria das pessoas não fica para ver o vídeo. Os 3 primeiros segundos não estão funcionando.',
+      actions: ['Reescreva a abertura: comece com uma pergunta direta, dado impactante ou demonstração',
+                'Corte o silêncio inicial — o vídeo deve começar com energia',
+                'Teste legendas em movimento nos primeiros 3s',
+                'Experimente diferentes personagens ou ambientes de abertura']});
+  }
+
+  // Campanhas com CPA inconsistente
+  const highCpaCamps = camps.filter(c => {
+    const cpa = parseFloat(c.cpa||0);
+    return cpaMeta > 0 && cpa > cpaMeta * 1.5 && c.status === 'ACTIVE';
+  });
+  if (highCpaCamps.length > 0) {
+    issues.push({ sev: 'warning', icon: '⚖️', title: `${highCpaCamps.length} campanha(s) com CPA >150% da meta`,
+      desc: `${highCpaCamps.map(c => c.campaign_name.substring(0,40)).join(', ')} estão consumindo verba com resultado abaixo do esperado.`,
+      actions: ['Pause os conjuntos mais caros e redistribua para os rentáveis',
+                'Analise a segmentação [F/M/Q] — públicos quentes convertem mais barato',
+                'Revise o criativo específico dessas campanhas',
+                'Considere pausar temporariamente se não melhorar em 3 dias']});
+  }
+
+  // Pacing
+  const pac = data.pacing || {};
+  const pacPct = pac.budget_daily > 0 ? (pac.spent_today / (pac.budget_daily/100)) * 100 : 0;
+  const expPct = (pac.hour_pct || 0) * 100;
+  if (pacPct > expPct + 20) {
+    issues.push({ sev: 'warning', icon: '⚡', title: 'Pacing acelerado — gasto antes das 23:59',
+      desc: 'A campanha está gastando toda a verba muito cedo, perdendo audiência no período noturno.',
+      actions: ['Reduza o orçamento diário em 15–20%',
+                'Ative programação de horários se o negócio tem pico de atendimento',
+                'No Meta, use Campaign Budget Optimization para distribuir melhor']});
+  } else if (expPct > 20 && pacPct < expPct - 25) {
+    issues.push({ sev: 'warning', icon: '🐢', title: 'Pacing lento — entrega abaixo do esperado',
+      desc: 'A campanha não está gastando o orçamento disponível. Está perdendo impressões e resultados.',
+      actions: ['Amplie a segmentação (público pequeno limita entrega)',
+                'Aumente o lance ou mude para menor custo',
+                'Verifique se não há restrições de aprovação pendentes no BM']});
+  }
+
+  // Tudo ok
+  if (issues.length === 0) {
+    issues.push({ sev: 'ok', icon: '✅', title: 'Métricas dentro dos parâmetros esperados',
+      desc: 'Nenhum problema crítico identificado. Continue monitorando diariamente e documente as ações.',
+      actions: ['Mantenha a rotina de análise diária de pacing e CPA',
+                'Teste novos criativos preventivamente antes de saturar os atuais',
+                'Prepare propostas de expansão de verba para os conjuntos com melhor CPA'] });
+  }
+
+  const diagCards = issues.map(i => `
+    <div class="diag-card ${i.sev}">
+      <div style="font-size:24px;flex-shrink:0;margin-top:2px;">${i.icon}</div>
+      <div class="diag-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="diag-badge ${i.sev}">${i.sev === 'critical' ? 'CRÍTICO' : i.sev === 'warning' ? 'ATENÇÃO' : 'OK'}</span>
+          <div class="diag-title">${i.title}</div>
+        </div>
+        <div class="diag-desc">${i.desc}</div>
+        <div class="diag-actions">${i.actions.map(a => `<div class="diag-action">${a}</div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="section" style="margin-top:0;">
+      <div class="section-title" style="margin-bottom:4px;">🔍 DIAGNÓSTICO AUTOMÁTICO</div>
+      <div style="font-size:11px;color:var(--txt-muted);margin-bottom:16px;">
+        Baseado nas métricas do período. ${issues.filter(i=>i.sev==='critical').length} problema(s) crítico(s) · ${issues.filter(i=>i.sev==='warning').length} atenção · ${issues.filter(i=>i.sev==='ok').length} ok.
+      </div>
+      ${diagCards}
+      <div style="margin-top:20px;background:var(--surf-1);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--txt-secondary);margin-bottom:10px;letter-spacing:.5px;">📋 FRAMEWORK DE OTIMIZAÇÃO — ORDEM PRIORITÁRIA</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;">
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">1.</span><span>Mapeie o funil → identifique o gargalo (CPM · CTR · Connect · Conversão)</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">2.</span><span>Verifique o destino ANTES de mexer no gerenciador</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">3.</span><span>Pause anúncios com CTR <0,5% e CPM >2× benchmark</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">4.</span><span>Escale conjuntos com CPA abaixo da meta e pacing estável</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">5.</span><span>Frequência >3,5x → novos criativos urgente ou pausa + reativação</span></div>
+          <div style="display:flex;gap:8px;"><span style="color:var(--accent);font-weight:700;min-width:20px;">6.</span><span>Documente TODAS as ações com data, motivo e resultado esperado</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── CHART HELPERS ────────────────────────────────────────────────────────────
+function initMetaCharts(data) {
+  const insights = data.insights || [];
+  const metricSel = document.getElementById('meta-chart-metric')?.value || 'spend';
+
+  const metricMap = {
+    spend:       { label: 'Investimento (R$)',  fn: d => parseFloat(d.spend||0),       color: '#6E7F99' },
+    impressions: { label: 'Impressões',          fn: d => parseInt(d.impressions||0),   color: '#63B3ED' },
+    clicks:      { label: 'Cliques',             fn: d => parseInt(d.clicks||0),        color: '#34D399' },
+    ctr:         { label: 'CTR (%)',             fn: d => parseFloat(d.ctr||0),         color: '#FBBF24' },
+    cpm:         { label: 'CPM (R$)',            fn: d => parseFloat(d.cpm||0),         color: '#A78BFA' },
+    cpc:         { label: 'CPC (R$)',            fn: d => parseFloat(d.cpc||0),         color: '#F87171' },
+    frequency:   { label: 'Frequência',          fn: d => parseFloat(d.frequency||0),   color: '#FB923C' }
+  };
+  const mm = metricMap[metricSel] || metricMap['spend'];
+
+  const ctx = document.getElementById('meta-chart-spend');
+  if (ctx && window.Chart) {
+    if (ctx._chartInstance) ctx._chartInstance.destroy();
+    ctx._chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: insights.map(d => { const dt = new Date(d.date_start+'T12:00:00'); return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }),
+        datasets: [{
+          label: mm.label, data: insights.map(mm.fn),
+          borderColor: mm.color, backgroundColor: mm.color+'18',
+          borderWidth: 2, tension: 0.4, fill: true, pointRadius: 2, pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: '#7D8794', font: { family: 'DM Mono', size: 10 } }, grid: { color: '#263140' }, border: { display: false } },
+          x: { ticks: { color: '#7D8794', font: { size: 10 }, maxTicksLimit: 12 }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+  }
+
+  const ctxC = document.getElementById('meta-chart-campaigns');
+  if (ctxC && window.Chart) {
+    if (ctxC._chartInstance) ctxC._chartInstance.destroy();
+    const camps = [...(data.campaign_insights||[])].sort((a,b) => parseFloat(b.spend)-parseFloat(a.spend)).slice(0,5);
+    ctxC._chartInstance = new Chart(ctxC, {
+      type: 'bar',
+      data: {
+        labels: camps.map(c => c.campaign_name.length > 30 ? c.campaign_name.substring(0,30)+'…' : c.campaign_name),
+        datasets: [{ data: camps.map(c => parseFloat(c.spend||0)), backgroundColor: ['#6E7F99','#63B3ED','#34D399','#FBBF24','#A78BFA'], borderRadius: 4 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#7D8794', font: { family: 'DM Mono', size: 10 } }, grid: { color: '#263140' }, border: { display: false } },
+          y: { ticks: { color: '#B4BDC9', font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+  }
 }
 
 function updateMetaChart() {
-  // Atualiza o chart de linha com a métrica selecionada (funcionalidade futura)
-  const metric = document.getElementById('meta-chart-metric')?.value;
-  if (CURRENT_CLIENT) renderMetaDashboard(CURRENT_CLIENT.id);
+  if (META_CURRENT_SUBTAB === 'geral' && META_STATE.data) {
+    setTimeout(() => initMetaCharts(META_STATE.data), 50);
+  }
 }
 
 function showMetaLoading(show) {
