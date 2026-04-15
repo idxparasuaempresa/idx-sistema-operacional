@@ -6479,73 +6479,324 @@ function sendDiarioReport() {
 }
 
 // ===== DEMAIS TABS (STUBS) =====
-function renderOnboarding(content = null) {
-  const c = content || document.getElementById('main-content');
+// =====================================================
+// ONBOARDING — Sistema por cliente, checklist detalhado
+// =====================================================
 
-  const tasks = [
-    { id: 1, client: 'Cliente A', task: 'Criar conta de anúncios', status: 'concluida', priority: 'alta' },
-    { id: 2, client: 'Cliente B', task: 'Configurar pixel de rastreamento', status: 'em_progresso', priority: 'alta' },
-    { id: 3, client: 'Cliente C', task: 'Primeira campanha aprovada', status: 'pendente', priority: 'media' },
-    { id: 4, client: 'Cliente A', task: 'Integração com CRM', status: 'pendente', priority: 'media' },
-    { id: 5, client: 'Cliente D', task: 'Treinamento com cliente', status: 'em_progresso', priority: 'baixa' }
-  ];
+const ONBOARDING_STEPS = [
+  {
+    fase: 'FASE 1 — ACESSO & CONFIGURAÇÃO',
+    icon: '🔑',
+    items: [
+      { key: 'bm_acesso',           label: 'Acesso ao Business Manager / Gerenciador de Anúncios concedido' },
+      { key: 'pixel_instalado',     label: 'Pixel do Meta instalado e verificado no site' },
+      { key: 'pagamento_config',    label: 'Forma de pagamento da conta de anúncios configurada' },
+      { key: 'gmn_acesso',          label: 'Acesso ao Google Meu Negócio concedido' },
+      { key: 'google_ads_acesso',   label: 'Conta Google Ads criada ou acesso concedido' },
+      { key: 'analytics_config',    label: 'Google Analytics / GA4 configurado e vinculado' },
+    ]
+  },
+  {
+    fase: 'FASE 2 — LEVANTAMENTO ESTRATÉGICO',
+    icon: '🎯',
+    items: [
+      { key: 'briefing_realizado',  label: 'Briefing completo realizado com o cliente' },
+      { key: 'publico_definido',    label: 'Público-alvo definido (idade, gênero, região, interesses)' },
+      { key: 'orcamento_definido',  label: 'Orçamento mensal de tráfego definido e aprovado' },
+      { key: 'objetivo_definido',   label: 'Objetivo principal definido (WhatsApp, ligação, lead, venda)' },
+      { key: 'concorrentes',        label: 'Principais concorrentes mapeados e analisados' },
+      { key: 'diferencial',         label: 'Diferencial da empresa e oferta principal definidos' },
+      { key: 'cpa_meta_definido',   label: 'Meta de CPA / custo por resultado definida' },
+    ]
+  },
+  {
+    fase: 'FASE 3 — ESTRUTURAÇÃO DE CAMPANHAS',
+    icon: '🏗️',
+    items: [
+      { key: 'estrutura_camp',      label: 'Estrutura de campanhas planejada (objetivos, conjuntos, anúncios)' },
+      { key: 'nomenclatura_ok',     label: 'Nomenclatura de campanhas definida e aplicada' },
+      { key: 'criativos_recebidos', label: 'Criativos iniciais recebidos do cliente (fotos, vídeos)' },
+      { key: 'copies_criadas',      label: 'Copies dos anúncios escritas e aprovadas pelo cliente' },
+      { key: 'landing_page_ok',     label: 'Landing page / destino revisado e aprovado' },
+      { key: 'utm_config',          label: 'UTMs e rastreamento de conversão configurados' },
+    ]
+  },
+  {
+    fase: 'FASE 4 — LANÇAMENTO',
+    icon: '🚀',
+    items: [
+      { key: 'campanha_no_ar',      label: 'Primeira campanha publicada e rodando' },
+      { key: 'revisao_24h',         label: 'Revisão das métricas nas primeiras 24h realizada' },
+      { key: 'relatorio_inicial',   label: 'Relatório inicial (primeiros resultados) enviado ao cliente' },
+      { key: 'alinhamento_exp',     label: 'Alinhamento de expectativas e metas realizado' },
+      { key: 'canal_comunicacao',   label: 'Canal de comunicação com cliente estabelecido (WhatsApp/e-mail)' },
+    ]
+  },
+  {
+    fase: 'FASE 5 — CONSOLIDAÇÃO',
+    icon: '✅',
+    items: [
+      { key: 'primeiro_resultado',  label: 'Primeiro resultado positivo documentado' },
+      { key: 'feedback_cliente',    label: 'Feedback inicial do cliente coletado e registrado' },
+      { key: 'rotina_relatorios',   label: 'Rotina de relatórios e comunicação estabelecida' },
+      { key: 'otimizacao_inicial',  label: 'Primeira otimização realizada com base nos dados' },
+      { key: 'cliente_satisfeito',  label: 'Cliente confirmou satisfação com o início do serviço' },
+    ]
+  }
+];
+
+// Total de itens no checklist
+const ONBOARDING_TOTAL = ONBOARDING_STEPS.reduce((a, f) => a + f.items.length, 0);
+
+// Carrega dados do onboarding do localStorage
+function obLoadData() {
+  try { return JSON.parse(localStorage.getItem('idx_onboarding_v1') || '{}'); }
+  catch(e) { return {}; }
+}
+
+// Salva dados do onboarding
+function obSaveData(data) {
+  localStorage.setItem('idx_onboarding_v1', JSON.stringify(data));
+}
+
+// Calcula progresso de um cliente
+function obGetProgress(clientId) {
+  const data = obLoadData();
+  const clientData = data[clientId] || {};
+  let done = 0;
+  ONBOARDING_STEPS.forEach(fase => {
+    fase.items.forEach(item => {
+      if (clientData[item.key]?.done) done++;
+    });
+  });
+  return { done, total: ONBOARDING_TOTAL, pct: Math.round((done / ONBOARDING_TOTAL) * 100) };
+}
+
+// Toggle de item individual
+function obToggleItem(clientId, itemKey) {
+  const data = obLoadData();
+  if (!data[clientId]) data[clientId] = {};
+  const current = data[clientId][itemKey]?.done || false;
+  data[clientId][itemKey] = {
+    done: !current,
+    done_at: !current ? new Date().toISOString() : null,
+    done_by: USER_EMAIL || 'sistema'
+  };
+  obSaveData(data);
+  // Re-renderiza o checklist do cliente sem recarregar a tela toda
+  const prog = obGetProgress(clientId);
+  const pctEl = document.getElementById('ob-pct-' + clientId);
+  const barEl = document.getElementById('ob-bar-' + clientId);
+  const doneEl = document.getElementById('ob-done-' + clientId);
+  if (pctEl) pctEl.textContent = prog.pct + '%';
+  if (barEl) barEl.style.width = prog.pct + '%';
+  if (doneEl) doneEl.textContent = prog.done + '/' + prog.total;
+  // Atualiza visual do checkbox
+  const box = document.getElementById('ob-item-' + clientId + '-' + itemKey);
+  if (box) {
+    box.style.background = !current ? 'var(--green)' : 'var(--bg-base)';
+    box.style.borderColor = !current ? 'var(--green)' : 'var(--border-light)';
+    box.innerHTML = !current ? '✓' : '';
+  }
+  // Atualiza cor da label
+  const lbl = document.getElementById('ob-lbl-' + clientId + '-' + itemKey);
+  if (lbl) {
+    lbl.style.textDecoration = !current ? 'line-through' : 'none';
+    lbl.style.color = !current ? 'var(--txt-muted)' : 'var(--txt-primary)';
+  }
+}
+
+// ---- RENDERIZAÇÃO ----
+
+function renderOnboarding() {
+  const c = document.getElementById('main-content');
+  if (!CLIENTES || CLIENTES.length === 0) {
+    c.innerHTML = `
+      <div class="detail-header"><div class="detail-title">⚡ Onboarding de Clientes</div></div>
+      <div class="card" style="text-align:center;padding:40px;color:var(--txt-muted);">
+        Nenhum cliente cadastrado. Adicione clientes primeiro.
+      </div>`;
+    return;
+  }
+
+  const data = obLoadData();
+
+  // Calcula totais globais
+  let totalDone = 0, totalItems = CLIENTES.length * ONBOARDING_TOTAL;
+  CLIENTES.forEach(cl => { totalDone += obGetProgress(cl.id).done; });
+  const globalPct = Math.round((totalDone / totalItems) * 100) || 0;
+
+  // Conta clientes por status
+  const concluidos  = CLIENTES.filter(cl => obGetProgress(cl.id).pct === 100).length;
+  const emAndamento = CLIENTES.filter(cl => { const p = obGetProgress(cl.id).pct; return p > 0 && p < 100; }).length;
+  const naoIniciados = CLIENTES.filter(cl => obGetProgress(cl.id).pct === 0).length;
 
   let html = `
     <div class="detail-header">
-      <div class="detail-title">⚡ Onboarding de Clientes</div>
-      <button class="btn-small" onclick="addOnboardingTask()">+ Nova Tarefa</button>
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px;">
-      <div class="card" style="text-align:center;">
-        <div class="card-label">CONCLUÍDAS</div>
-        <div class="card-value" style="color:var(--green);">1</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div class="card-label">EM PROGRESSO</div>
-        <div class="card-value" style="color:var(--yellow);">2</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div class="card-label">PENDENTES</div>
-        <div class="card-value" style="color:var(--red);">2</div>
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--txt-muted);font-weight:700;margin-bottom:4px;">ONBOARDING</div>
+        <div style="font-size:20px;font-weight:800;">⚡ Onboarding de Clientes</div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">📋 TAREFAS</div>
-      <div style="display:flex; flex-direction:column; gap:12px;">
+    <!-- KPIs globais -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+      <div class="card" style="text-align:center;">
+        <div class="card-label">PROGRESSO GERAL</div>
+        <div class="card-value" style="color:var(--accent);">${globalPct}%</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">CONCLUÍDOS</div>
+        <div class="card-value" style="color:var(--green);">${concluidos}</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">EM ANDAMENTO</div>
+        <div class="card-value" style="color:var(--yellow);">${emAndamento}</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-label">NÃO INICIADOS</div>
+        <div class="card-value" style="color:var(--txt-muted);">${naoIniciados}</div>
+      </div>
+    </div>
+
+    <!-- Lista de clientes -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
   `;
 
-  for (const task of tasks) {
-    const statusBadge = task.status === 'concluida' ? '<span class="badge badge-green">✓ Concluída</span>' :
-                        task.status === 'em_progresso' ? '<span class="badge badge-yellow">⟳ Em Progresso</span>' :
-                        '<span class="badge badge-red">⏳ Pendente</span>';
-    const priorityColor = task.priority === 'alta' ? 'var(--red)' : task.priority === 'media' ? 'var(--yellow)' : 'var(--green)';
+  // Ordena: menor progresso primeiro (prioridade de atenção)
+  const sorted = [...CLIENTES].sort((a, b) => obGetProgress(a.id).pct - obGetProgress(b.id).pct);
+
+  sorted.forEach(cl => {
+    const prog = obGetProgress(cl.id);
+    const statusColor = prog.pct === 100 ? 'var(--green)' : prog.pct > 0 ? 'var(--yellow)' : 'var(--txt-muted)';
+    const statusLabel = prog.pct === 100 ? '✅ Concluído' : prog.pct > 0 ? '⏳ Em andamento' : '🔴 Não iniciado';
 
     html += `
-      <div class="card" style="display:flex; gap:12px; align-items:start;">
-        <div style="flex:1;">
-          <div style="font-weight:600; color:var(--txt-primary);">${task.task}</div>
-          <div style="font-size:12px; color:var(--txt-muted); margin-top:4px;">${task.client}</div>
+      <div class="card" style="cursor:pointer;" onclick="renderOnboardingCliente('${cl.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div>
+            <div style="font-weight:700;font-size:15px;">${cl.nome}</div>
+            <div style="font-size:12px;color:var(--txt-muted);margin-top:2px;">${cl.nicho || '—'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:22px;font-weight:800;color:${statusColor};" id="ob-pct-${cl.id}">${prog.pct}%</div>
+            <div style="font-size:11px;color:var(--txt-muted);" id="ob-done-${cl.id}">${prog.done}/${prog.total} itens</div>
+          </div>
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <span class="badge" style="background:transparent; border:1px solid ${priorityColor}; color:${priorityColor};">${task.priority}</span>
-          ${statusBadge}
+        <!-- Barra de progresso -->
+        <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden;">
+          <div id="ob-bar-${cl.id}" style="height:100%;width:${prog.pct}%;background:${statusColor};border-radius:3px;transition:width 0.4s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:11px;color:${statusColor};">${statusLabel}</span>
+          <span style="font-size:11px;color:var(--accent);">Ver checklist →</span>
         </div>
       </div>
     `;
-  }
+  });
+
+  html += `</div>`;
+  c.innerHTML = html;
+}
+
+function renderOnboardingCliente(clientId) {
+  const c = document.getElementById('main-content');
+  const cl = CLIENTES.find(x => x.id === clientId);
+  if (!cl) return;
+
+  const data = obLoadData();
+  const clientData = data[clientId] || {};
+  const prog = obGetProgress(clientId);
+  const statusColor = prog.pct === 100 ? 'var(--green)' : prog.pct > 0 ? 'var(--yellow)' : 'var(--txt-muted)';
+
+  let html = `
+    <div class="detail-header">
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--txt-muted);font-weight:700;margin-bottom:4px;">
+          <span onclick="renderOnboarding()" style="cursor:pointer;color:var(--accent);">⚡ Onboarding</span> / ${cl.nome}
+        </div>
+        <div style="font-size:20px;font-weight:800;">${cl.nome}</div>
+        <div style="font-size:12px;color:var(--txt-muted);">${cl.nicho || ''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:28px;font-weight:800;color:${statusColor};" id="ob-pct-${clientId}">${prog.pct}%</div>
+        <div style="font-size:12px;color:var(--txt-muted);" id="ob-done-${clientId}">${prog.done}/${prog.total} itens concluídos</div>
+      </div>
+    </div>
+
+    <!-- Barra de progresso grande -->
+    <div style="height:10px;background:var(--border-light);border-radius:5px;overflow:hidden;margin-bottom:24px;">
+      <div id="ob-bar-${clientId}" style="height:100%;width:${prog.pct}%;background:${statusColor};border-radius:5px;transition:width 0.4s;"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+  `;
+
+  ONBOARDING_STEPS.forEach(fase => {
+    const faseDone = fase.items.filter(item => clientData[item.key]?.done).length;
+    const fasePct = Math.round((faseDone / fase.items.length) * 100);
+    const faseColor = fasePct === 100 ? 'var(--green)' : fasePct > 0 ? 'var(--yellow)' : 'var(--border-mid)';
+
+    html += `
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--txt-muted);">${fase.icon} ${fase.fase}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:80px;height:4px;background:var(--border-light);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${fasePct}%;background:${faseColor};border-radius:2px;"></div>
+            </div>
+            <span style="font-size:11px;color:${faseColor};font-weight:700;">${faseDone}/${fase.items.length}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+    `;
+
+    fase.items.forEach(item => {
+      const done = clientData[item.key]?.done || false;
+      const doneAt = clientData[item.key]?.done_at;
+      const doneBy = clientData[item.key]?.done_by;
+      const doneLabel = doneAt ? ` · ${new Date(doneAt).toLocaleDateString('pt-BR')}${doneBy ? ' por ' + doneBy.split('@')[0] : ''}` : '';
+
+      html += `
+        <div onclick="obToggleItem('${clientId}','${item.key}')"
+          style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius);cursor:pointer;transition:background 0.15s;"
+          onmouseover="this.style.background='var(--bg-accent)'" onmouseout="this.style.background='transparent'">
+          <!-- Checkbox -->
+          <div id="ob-item-${clientId}-${item.key}"
+            style="width:20px;height:20px;min-width:20px;border-radius:4px;border:1px solid ${done ? 'var(--green)' : 'var(--border-light)'};
+                   background:${done ? 'var(--green)' : 'var(--bg-base)'};
+                   display:flex;align-items:center;justify-content:center;
+                   font-size:13px;color:#fff;font-weight:700;transition:all 0.2s;">
+            ${done ? '✓' : ''}
+          </div>
+          <!-- Label -->
+          <div style="flex:1;">
+            <div id="ob-lbl-${clientId}-${item.key}"
+              style="font-size:13px;color:${done ? 'var(--txt-muted)' : 'var(--txt-primary)'};
+                     text-decoration:${done ? 'line-through' : 'none'};transition:all 0.2s;">
+              ${item.label}
+            </div>
+            ${done && doneLabel ? `<div style="font-size:11px;color:var(--txt-disabled);margin-top:2px;">${doneLabel}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+  });
 
   html += `
-      </div>
+    </div>
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;">
+      <button class="btn-secondary" onclick="renderOnboarding()">← Voltar aos clientes</button>
+      ${prog.pct === 100
+        ? `<span style="color:var(--green);font-weight:700;">🎉 Onboarding 100% concluído!</span>`
+        : `<span style="font-size:12px;color:var(--txt-muted);">Clique em cada item para marcar como concluído</span>`
+      }
     </div>
   `;
 
   c.innerHTML = html;
-}
-
-function addOnboardingTask() {
-  showToast('Tarefa de onboarding adicionada', 'success');
 }
 
 async function renderRotina() {
